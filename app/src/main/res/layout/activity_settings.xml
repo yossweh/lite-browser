@@ -3,22 +3,140 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- Ad Block -->
+        <!-- Section: General -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="General"
+            android:textSize="14sp"
+            android:textColor="@color/text_hint"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Homepage -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="12dp"
-            android:background="@color/surface"
-            android:layout_marginBottom="8dp">
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:id="@+id/layoutHomepage">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Homepage" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Homepage"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvHomepage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="https://www.google.com"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Search Engine -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:id="@+id/layoutSearchEngine">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_search"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Search" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Search Engine"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvSearchEngine"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Google"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Section: Privacy & Security -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Privacy & Security"
+            android:textSize="14sp"
+            android:textColor="@color/text_hint"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Ad Blocker -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_ad_block"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Ad Blocker" />
 
             <TextView
                 android:layout_width="0dp"
@@ -35,71 +153,291 @@
 
         </LinearLayout>
 
-        <!-- Homepage -->
-        <TextView
-            android:id="@+id/tvHomepage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Homepage: https://www.google.com"
-            android:textSize="16sp"
-            android:textColor="@color/text_primary"
-            android:padding="12dp"
-            android:background="@color/surface"
-            android:layout_marginBottom="8dp" />
-
-        <!-- User Agent -->
+        <!-- JavaScript -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@color/surface"
-            android:layout_marginBottom="8dp">
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_javascript"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="JavaScript" />
 
             <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="JavaScript"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <Switch
+                android:id="@+id/switchJavascript"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="User Agent"
-                android:textSize="16sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
+                android:checked="true" />
 
-            <Spinner
-                android:id="@+id/spinnerUserAgent"
-                android:layout_width="match_parent"
+        </LinearLayout>
+
+        <!-- Section: Appearance -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Appearance"
+            android:textSize="14sp"
+            android:textColor="@color/text_hint"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Dark Mode -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_dark_mode"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Dark Mode" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dark Mode"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <Switch
+                android:id="@+id/switchDarkMode"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
         </LinearLayout>
 
-        <!-- Clear Data -->
-        <Button
-            android:id="@+id/btnClearData"
+        <!-- User Agent -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Clear Browsing Data"
-            android:layout_marginBottom="8dp" />
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:id="@+id/layoutUserAgent">
 
-        <!-- Ad Info -->
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_user_agent"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="User Agent" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="User Agent"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvUserAgent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Default (Mobile)"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Section: Data -->
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ads help keep this app free. Watch a rewarded ad to remove ads for your current session."
+            android:text="Data"
             android:textSize="14sp"
             android:textColor="@color/text_hint"
-            android:padding="12dp"
-            android:background="@color/surface"
-            android:layout_marginBottom="8dp" />
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Clear Cache -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:id="@+id/layoutClearCache">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_delete"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Clear Cache" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Clear Cache"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/tvCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 MB"
+                android:textSize="14sp"
+                android:textColor="@color/text_hint" />
+
+        </LinearLayout>
+
+        <!-- Clear History -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:id="@+id/layoutClearHistory">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Clear History" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Clear History"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/tvHistoryCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 items"
+                android:textSize="14sp"
+                android:textColor="@color/text_hint" />
+
+        </LinearLayout>
+
+        <!-- Section: About -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="About"
+            android:textSize="14sp"
+            android:textColor="@color/text_hint"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
 
         <!-- Version -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_info"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Version" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Version"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3.0.0"
+                android:textSize="14sp"
+                android:textColor="@color/text_hint" />
+
+        </LinearLayout>
+
+        <!-- Remove Ads -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginTop="16dp"
+            android:id="@+id/layoutRemoveAds">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_reward"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Remove Ads" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Remove Ads (Watch Video)"
+                android:textSize="16sp"
+                android:textColor="#FF4CAF50" />
+
+        </LinearLayout>
+
+        <!-- Info text -->
         <TextView
-            android:id="@+id/tvVersion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Version: 3.0.0"
-            android:textSize="14sp"
+            android:text="Watch a short video to remove ads for your current session. This helps keep the app free!"
+            android:textSize="12sp"
             android:textColor="@color/text_hint"
-            android:padding="12dp"
-            android:background="@color/surface" />
+            android:padding="16dp"
+            android:gravity="center" />
 
     </LinearLayout>
 

@@ -6,8 +6,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.webkit.*
@@ -35,8 +33,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnBack: ImageButton
     private lateinit var btnForward: ImageButton
     private lateinit var btnTabs: ImageButton
-    private lateinit var btnMenu: ImageButton
+    private lateinit var tvTabCount: TextView
     private lateinit var adContainer: FrameLayout
+
+    // Bottom navigation
+    private lateinit var btnHome: ImageButton
+    private lateinit var btnBookmarks: ImageButton
+    private lateinit var btnHistory: ImageButton
+    private lateinit var btnShare: ImageButton
+    private lateinit var btnSettings: ImageButton
 
     private lateinit var tabManager: TabManager
     private lateinit var adBlocker: AdBlocker
@@ -59,8 +64,15 @@ class MainActivity : AppCompatActivity() {
         btnBack = findViewById(R.id.btnBack)
         btnForward = findViewById(R.id.btnForward)
         btnTabs = findViewById(R.id.btnTabs)
-        btnMenu = findViewById(R.id.btnMenu)
+        tvTabCount = findViewById(R.id.tvTabCount)
         adContainer = findViewById(R.id.adContainer)
+
+        // Bottom navigation
+        btnHome = findViewById(R.id.btnHome)
+        btnBookmarks = findViewById(R.id.btnBookmarks)
+        btnHistory = findViewById(R.id.btnHistory)
+        btnShare = findViewById(R.id.btnShare)
+        btnSettings = findViewById(R.id.btnSettings)
 
         // Initialize managers
         tabManager = TabManager(this)
@@ -206,11 +218,15 @@ class MainActivity : AppCompatActivity() {
         // Tabs button
         btnTabs.setOnClickListener { showTabsDialog() }
 
-        // Menu button
-        btnMenu.setOnClickListener { showMenu() }
-
         // Swipe refresh
         swipeRefresh.setOnRefreshListener { webView.reload() }
+
+        // Bottom navigation
+        btnHome.setOnClickListener { loadUrl(prefsManager.getHomepage()) }
+        btnBookmarks.setOnClickListener { showBookmarks() }
+        btnHistory.setOnClickListener { showHistory() }
+        btnShare.setOnClickListener { sharePage() }
+        btnSettings.setOnClickListener { openSettings() }
     }
 
     private fun loadUrl(input: String) {
@@ -241,65 +257,16 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("New Tab") { _, _ ->
                 tabManager.addTab(currentUrl)
                 loadUrl(prefsManager.getHomepage())
+                updateTabCount()
             }
             .setNegativeButton("Close", null)
             .show()
     }
 
-    private fun showMenu() {
-        val items = arrayOf(
-            "New Tab",
-            "Bookmarks",
-            "History",
-            "Share",
-            "Find in Page",
-            "Desktop Site",
-            "Remove Ads (Watch Ad)",
-            "Settings"
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle("Menu")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> {
-                        tabManager.addTab(webView.url ?: "")
-                        loadUrl(prefsManager.getHomepage())
-                    }
-                    1 -> showBookmarks()
-                    2 -> showHistory()
-                    3 -> sharePage()
-                    4 -> showFindInPage()
-                    5 -> toggleDesktopSite()
-                    6 -> showRewardedAd()
-                    7 -> openSettings()
-                }
-            }
-            .show()
-    }
-
-    private fun showRewardedAd() {
-        if (adManager.hasRewardedAd()) {
-            adManager.showRewarded {
-                // User watched ad, disable ads for this session
-                adContainer.visibility = View.GONE
-                bannerAdView?.destroy()
-                bannerAdView = null
-            }
-        } else {
-            AlertDialog.Builder(this)
-                .setTitle("Remove Ads")
-                .setMessage("Watch a short video to remove ads for this session?")
-                .setPositiveButton("Watch Ad") { _, _ ->
-                    adManager.showRewarded {
-                        adContainer.visibility = View.GONE
-                        bannerAdView?.destroy()
-                        bannerAdView = null
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
+    private fun updateTabCount() {
+        val count = tabManager.getTabs().size
+        tvTabCount.text = count.toString()
+        tvTabCount.visibility = if (count > 1) View.VISIBLE else View.GONE
     }
 
     private fun showBookmarks() {
@@ -354,32 +321,6 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(shareIntent, "Share via"))
     }
 
-    private fun showFindInPage() {
-        val editText = EditText(this)
-        editText.hint = "Find in page"
-
-        AlertDialog.Builder(this)
-            .setTitle("Find in Page")
-            .setView(editText)
-            .setPositiveButton("Find") { _, _ ->
-                webView.findAllAsync(editText.text.toString())
-            }
-            .setNegativeButton("Close", null)
-            .show()
-    }
-
-    private fun toggleDesktopSite() {
-        val currentUrl = webView.url ?: return
-        val isDesktop = webView.settings.userAgentString?.contains("Desktop") == true
-
-        if (isDesktop) {
-            webView.settings.userAgentString = prefsManager.getUserAgent()
-        } else {
-            webView.settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        webView.loadUrl(currentUrl)
-    }
-
     private fun openSettings() {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
@@ -397,6 +338,7 @@ class MainActivity : AppCompatActivity() {
         webView.onResume()
         bannerAdView?.resume()
         isAdBlockEnabled = prefsManager.isAdBlockEnabled()
+        updateTabCount()
     }
 
     override fun onPause() {
