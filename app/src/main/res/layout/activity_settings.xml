@@ -110,11 +110,11 @@
 
         </LinearLayout>
 
-        <!-- Section: Privacy and Security -->
+        <!-- Section: Privacy -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Privacy and Security"
+            android:text="Privacy"
             android:textSize="14sp"
             android:textColor="@color/text_hint"
             android:fontFamily="sans-serif-medium"
@@ -138,51 +138,32 @@
                 android:layout_marginEnd="16dp"
                 android:contentDescription="Ad Blocker" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ad Blocker"
-                android:textSize="16sp"
-                android:textColor="@color/text_primary" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ad Blocker"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Block ads and trackers"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint" />
+
+            </LinearLayout>
 
             <Switch
                 android:id="@+id/switchAdBlock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-
-        </LinearLayout>
-
-        <!-- JavaScript -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:background="@drawable/bg_settings_item"
-            android:layout_marginBottom="2dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_javascript"
-                android:layout_marginEnd="16dp"
-                android:contentDescription="JavaScript" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="JavaScript"
-                android:textSize="16sp"
-                android:textColor="@color/text_primary" />
-
-            <Switch
-                android:id="@+id/switchJavascript"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
 
         </LinearLayout>
 
@@ -214,13 +195,27 @@
                 android:layout_marginEnd="16dp"
                 android:contentDescription="Dark Mode" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Dark Mode"
-                android:textSize="16sp"
-                android:textColor="@color/text_primary" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dark Mode"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Easier on your eyes at night"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint" />
+
+            </LinearLayout>
 
             <Switch
                 android:id="@+id/switchDarkMode"
@@ -256,7 +251,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="User Agent"
+                    android:text="Desktop Mode"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary" />
 
@@ -264,11 +259,16 @@
                     android:id="@+id/tvUserAgent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Default (Mobile)"
+                    android:text="Mobile"
                     android:textSize="12sp"
                     android:textColor="@color/text_hint" />
 
             </LinearLayout>
+
+            <Switch
+                android:id="@+id/switchDesktopMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 
@@ -352,6 +352,150 @@
                 android:text="0 items"
                 android:textSize="14sp"
                 android:textColor="@color/text_hint" />
+
+        </LinearLayout>
+
+        <!-- Section: Advanced (collapsible) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:id="@+id/layoutAdvancedHeader">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_settings_item"
+                android:layout_marginBottom="2dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_settings"
+                    android:layout_marginEnd="16dp"
+                    android:contentDescription="Advanced" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Advanced Settings"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <ImageView
+                    android:id="@+id/ivAdvancedArrow"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_expand"
+                    android:contentDescription="Expand" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Advanced Content (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/layoutAdvancedContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="2dp">
+
+            <!-- JavaScript -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_settings_item"
+                android:layout_marginBottom="2dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_javascript"
+                    android:layout_marginEnd="16dp"
+                    android:contentDescription="JavaScript" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="JavaScript"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Required for most websites"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_hint" />
+
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/switchJavascript"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+
+            </LinearLayout>
+
+            <!-- User Agent (Full) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_settings_item"
+                android:layout_marginBottom="2dp"
+                android:id="@+id/layoutUserAgentFull">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_user_agent"
+                    android:layout_marginEnd="16dp"
+                    android:contentDescription="User Agent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="User Agent"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvUserAgentFull"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Default"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_hint" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 

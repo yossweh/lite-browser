@@ -1,7 +1,10 @@
 package com.litebrowser.settings
 
 import android.os.Bundle
+import android.view.View
 import android.webkit.WebView
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -13,6 +16,7 @@ import com.litebrowser.utils.PrefsManager
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var prefsManager: PrefsManager
+    private var isAdvancedExpanded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,9 +38,9 @@ class SettingsActivity : AppCompatActivity() {
             prefsManager.setAdBlockEnabled(isChecked)
         }
 
-        // JavaScript toggle
+        // JavaScript toggle (in Advanced)
         val switchJavascript = findViewById<Switch>(R.id.switchJavascript)
-        switchJavascript.isChecked = true // Default on
+        switchJavascript.isChecked = prefsManager.isJavascriptEnabled()
         switchJavascript.setOnCheckedChangeListener { _, isChecked ->
             prefsManager.setJavascriptEnabled(isChecked)
         }
@@ -49,29 +53,53 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Restart app to apply dark mode", Toast.LENGTH_SHORT).show()
         }
 
+        // Desktop Mode toggle
+        val switchDesktopMode = findViewById<Switch>(R.id.switchDesktopMode)
+        switchDesktopMode.isChecked = prefsManager.getUserAgent().contains("Windows")
+        switchDesktopMode.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                prefsManager.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                prefsManager.setUserAgentName("Desktop")
+            } else {
+                prefsManager.setUserAgent("Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                prefsManager.setUserAgentName("Mobile")
+            }
+        }
+
         // Homepage setting
         val tvHomepage = findViewById<TextView>(R.id.tvHomepage)
         tvHomepage.text = prefsManager.getHomepage()
-        findViewById<android.view.View>(R.id.layoutHomepage).setOnClickListener {
+        findViewById<View>(R.id.layoutHomepage).setOnClickListener {
             showHomepageDialog(tvHomepage)
         }
 
         // Search Engine setting
         val tvSearchEngine = findViewById<TextView>(R.id.tvSearchEngine)
         tvSearchEngine.text = prefsManager.getSearchEngineName()
-        findViewById<android.view.View>(R.id.layoutSearchEngine).setOnClickListener {
+        findViewById<View>(R.id.layoutSearchEngine).setOnClickListener {
             showSearchEngineDialog(tvSearchEngine)
         }
 
-        // User Agent
-        val tvUserAgent = findViewById<TextView>(R.id.tvUserAgent)
-        tvUserAgent.text = prefsManager.getUserAgentName()
-        findViewById<android.view.View>(R.id.layoutUserAgent).setOnClickListener {
-            showUserAgentDialog(tvUserAgent)
+        // User Agent (Full) in Advanced
+        val tvUserAgentFull = findViewById<TextView>(R.id.tvUserAgentFull)
+        tvUserAgentFull.text = prefsManager.getUserAgentName()
+        findViewById<View>(R.id.layoutUserAgentFull).setOnClickListener {
+            showUserAgentDialog(tvUserAgentFull)
+        }
+
+        // Advanced section toggle
+        val layoutAdvancedHeader = findViewById<View>(R.id.layoutAdvancedHeader)
+        val layoutAdvancedContent = findViewById<LinearLayout>(R.id.layoutAdvancedContent)
+        val ivAdvancedArrow = findViewById<ImageView>(R.id.ivAdvancedArrow)
+
+        layoutAdvancedHeader.setOnClickListener {
+            isAdvancedExpanded = !isAdvancedExpanded
+            layoutAdvancedContent.visibility = if (isAdvancedExpanded) View.VISIBLE else View.GONE
+            ivAdvancedArrow.rotation = if (isAdvancedExpanded) 180f else 0f
         }
 
         // Clear Cache
-        findViewById<android.view.View>(R.id.layoutClearCache).setOnClickListener {
+        findViewById<View>(R.id.layoutClearCache).setOnClickListener {
             WebView(this).clearCache(true)
             Toast.makeText(this, "Cache cleared", Toast.LENGTH_SHORT).show()
         }
@@ -79,7 +107,7 @@ class SettingsActivity : AppCompatActivity() {
         // Clear History
         val tvHistoryCount = findViewById<TextView>(R.id.tvHistoryCount)
         tvHistoryCount.text = "${prefsManager.getHistory().size} items"
-        findViewById<android.view.View>(R.id.layoutClearHistory).setOnClickListener {
+        findViewById<View>(R.id.layoutClearHistory).setOnClickListener {
             prefsManager.clearHistory()
             tvHistoryCount.text = "0 items"
             Toast.makeText(this, "History cleared", Toast.LENGTH_SHORT).show()
@@ -91,11 +119,11 @@ class SettingsActivity : AppCompatActivity() {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
             tvVersion.text = pInfo.versionName
         } catch (e: Exception) {
-            tvVersion.text = "3.0.0"
+            tvVersion.text = "5.0.0"
         }
 
         // Remove Ads
-        findViewById<android.view.View>(R.id.layoutRemoveAds).setOnClickListener {
+        findViewById<View>(R.id.layoutRemoveAds).setOnClickListener {
             showRewardedAdDialog()
         }
     }
@@ -195,7 +223,6 @@ class SettingsActivity : AppCompatActivity() {
             .setTitle("Remove Ads")
             .setMessage("Watch a short video to remove ads for your current session. This helps keep the app free!")
             .setPositiveButton("Watch Video") { _, _ ->
-                // This will be handled by MainActivity
                 setResult(RESULT_OK)
                 finish()
             }
