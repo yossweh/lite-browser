@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/malik/.gradle/caches/transforms-3/678f8f90516713ab9a21055c8d2ba99f/transformed/appcompat-1.4.0/res/layout/abc_search_view.xml" value="0.24635416666666668" />
+        <entry key="..\:/Users/malik/.gradle/caches/transforms-3/a3ac3e09c2eac1a7e99912ab6a7cac93/transformed/appcompat-1.4.0/res/layout/abc_search_view.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable-land/shadow.xml" value="0.1985" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/corner_shadow.xml" value="0.1985" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/gradient.xml" value="0.251" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_amazon_logo.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_broken_image_24.xml" value="0.1165" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_check_circle_24.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_color_lens_24.xml" value="0.182" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_fast_forward_24.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_fast_rewind_24.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_javascript_24.xml" value="0.193" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_more_horiz_24.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_baseline_save_alt_24.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_bing_logo.xml" value="0.19722222222222222" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_browser_144.xml" value="0.193" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_close_outline_24.xml" value="0.1985" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_database_24.xml" value="0.193" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_duckduckgo_logo.xml" value="0.1895" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_earth.xml" value="0.1895" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_earth_24.xml" value="0.193" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_ekatalog_logo.xml" value="0.1895" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_error_icon_144.xml" value="0.1895" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_google_logo.xml" value="0.19722222222222222" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_internet_security.xml" value="0.176" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_launcher_background.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_lightning.xml" value="0.1895" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_mailru_logo.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_manage.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_outline_keyboard_arrow_down_24.xml" value="0.2625" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_start_panel.xml" value="0.193" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_transition_24.xml" value="0.2415" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_twitter_logo.xml" value="0.13958333333333334" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_vk_logo.xml" value="0.13958333333333334" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ic_wikipedia_logo.xml" value="0.8800000000000001" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/launch_screen.xml" value="0.2" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/manual_ripple.xml" value="0.251" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/ripple.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/rounded_background.xml" value="0.251" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/rounded_corners.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/rounded_corners_manual.xml" value="0.251" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/rounded_rectangle.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/shadow.xml" value="0.252" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/shadow2.xml" value="0.158" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/drawable/shadow_side.xml" value="0.251" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout-land/content_main.xml" value="0.23974358974358975" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout-land/grid_pager_item.xml" value="0.23974358974358975" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout-land/tab_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout-land/tabs_fragment.xml" value="0.23974358974358975" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/activity_browser.xml" value="0.1555921052631579" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/activity_browser_hide_panels.xml" value="0.3886606409202958" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/activity_main.xml" value="0.4" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/activity_search_results.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/app_bar_browser.xml" value="0.536" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/app_bar_layout.xml" value="0.24635416666666668" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/app_bar_main.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/bookmark_fragment.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/bookmark_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/bookmarks_fragment.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/bottom_app_bar.xml" value="0.24635416666666668" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/bottom_bar.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/browser_settings_item.xml" value="0.2" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/browser_tab.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/browser_view.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/brws.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/chip_item.xml" value="0.536" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/color_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/content_main.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/create_bookmark_dialog.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/create_shortcut_dialog.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/current_windows_fragment.xml" value="0.176" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/find_in_page_layout.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/form.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/fragment_home.xml" value="0.24635416666666668" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/grid_pager_item.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/header_layout.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/hist_item.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/history_fragment.xml" value="0.176" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/history_item.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/label_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/main_grid_item.xml" value="0.4" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/more_menu.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/popup_dismiss_tint.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/popup_item.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/popup_menu.xml" value="0.2" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/progress_indicator.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/recent_fragment.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/recycler_view_item.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/screenshot_image.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/screenshot_tint.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/search_results_fragment.xml" value="0.19957805907172996" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/select_labels_dialog.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/selectable_label_item.xml" value="0.4" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/setting_header_item.xml" value="0.2" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/settings_fragment.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/settings_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/side_item.xml" value="0.2012820512820513" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/side_menu.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/side_menu_tint.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/tab_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/tabs_fragment.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/test.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/text_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/theme_picker_dialog.xml" value="0.1555921052631579" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/toolbar_item.xml" value="0.264" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/view_sticky_header.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layout/vpn_fragment.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layouts/fragments/drawable/esearch_144dp.xml" value="0.11452991452991453" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layouts/fragments/drawable/ic_browser_144.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layouts/fragments/layout/history_fragment.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layouts/fragments/mipmap-anydpi-v26/ic_launcher.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/layouts/fragments/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/menu/bottom_app_bar.xml" value="0.1" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/menu/ic_launcher_foreground.xml" value="0.10128205128205128" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/menu/more_menu.xml" value="0.20213675213675214" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2153846153846154" />
+        <entry key="..\:/Users/malik/AndroidStudioProjects/ESearch/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.11452991452991453" />
+      </map>
+    </option>
+  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

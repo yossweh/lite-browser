@@ -1,0 +1,239 @@
+package com.litebrowser.data
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.litebrowser.R
+import com.litebrowser.activity.BrowserActivity
+import com.litebrowser.activity.MainActivity.Companion.displayOffsetX
+import com.litebrowser.activity.MainActivity.Companion.displayOffsetY
+import com.litebrowser.custom.view.BrowserView
+import com.litebrowser.data.SharedPreferencesAccess.SAVE_TABS
+import com.litebrowser.data.SharedPreferencesAccess.getSetting
+import com.litebrowser.data.SharedPreferencesAccess.mainSharedPrefsKey
+import com.litebrowser.extensions.Extensions.dipToPixels
+import com.litebrowser.extensions.Extensions.fetchFavicon
+import com.litebrowser.extensions.Extensions.getBitmap
+import com.litebrowser.extensions.Extensions.getByteArray
+import com.litebrowser.extensions.Extensions.getString
+import com.litebrowser.extensions.Extensions.toByteArray
+import com.litebrowser.functions.Functions
+import com.litebrowser.functions.Functions.byteArrayToBitmap
+import com.litebrowser.functions.Functions.doInBackground
+import com.litebrowser.helper.adblock.AdBlocker.getDomain
+import com.litebrowser.helper.client.ChromeClient
+import com.litebrowser.helper.client.WebClient
+
+object BrowserTabs {
+
+    private const val splitter = "~)_~~#*!>/"
+
+    val openedTabs: ArrayList<BrowserTabItem> = ArrayList()
+
+    fun BrowserActivity.createNewTab(url: String = "https://google.com") {
+        val container = webViewContainer!!
+        val newTab = layoutInflater.inflate(R.layout.browser_tab, container, false) as BrowserView
+        container.removeView(findViewById(R.id.webBrowser))
+        container.addView(newTab)
+
+        newTab.webViewClient = WebClient(this, progressBar!!)
+        newTab.webChromeClient = ChromeClient(this, progressBar!!, newTab)
+        newTab.loadUrl(url)
+
+        openedTabs.add(BrowserTabItem(null, newTab.title!!, url, newTab))
+        browser = findViewById(R.id.webBrowser)
+        while (searchView?.isFocused == true) searchView?.clearFocus()
+
+        updateTabs()
+    }
+
+    fun BrowserActivity.saveLastTab() {
+        val container = webViewContainer!!
+        val lastTab: BrowserView = openedTabs[openedTabs.lastIndex].tab
+
+        var width = container.width
+        var height = container.height
+
+        if (width == 0) width = -displayOffsetX.toInt()
+        if (height == 0) height = -displayOffsetY.toInt() - dipToPixels(96f).toInt()
+        val fullSnap =
+            Bitmap.createBitmap(
+                width,
+                height,
+                Bitmap.Config.ARGB_8888
+            )
+        val canvas = Canvas(fullSnap)
+        container.draw(canvas)
+
+        if (openedTabs.isEmpty()) {
+            openedTabs.add(
+                BrowserTabItem(
+                    fullSnap,
+                    lastTab.title!!,
+                    lastTab.url!!,
+                    lastTab
+                )
+            )
+        } else {
+            val lastTabItem = openedTabs[openedTabs.lastIndex]
+            lastTabItem.fullSnap = fullSnap
+            lastTabItem.title = lastTab.title!!
+            lastTabItem.url = when (val rll = lastTab.url) {
+                null -> lastTabItem.url
+                else -> rll
+            }
+            lastTabItem.tab = lastTab
+            openedTabs[openedTabs.lastIndex] = lastTabItem
+        }
+        updateTabs()
+    }
+
+    fun BrowserActivity.loadTab(position: Int, save: Boolean = true) {
+        if (openedTabs.isEmpty()) {
+            createNewTab()
+        } else {
+            val tabToLoad = openedTabs[position].tab
+            val temp = openedTabs[position]
+            val container = webViewContainer!!
+            openedTabs.remove(temp)
+            openedTabs.add(temp)
+            if (save) this.saveLastTab()
+            container.removeView(findViewById(R.id.webBrowser))
+            container.addView(tabToLoad)
+            browser = tabToLoad
+            browser?.webChromeClient = ChromeClient(this, progressBar!!, tabToLoad)
+            browser?.webViewClient = WebClient(this, progressBar!!)
+            if (browser?.url == null) browser?.loadUrl(temp.url)
+            this.updateBottomNav()
+            val url = when (val rll = tabToLoad.url) {
+                null -> openedTabs[position].url
+                else -> rll
+            }
+            lastUrl = url
+            searchView?.setText(url.getDomain())
+            while (searchView?.isFocused == true) searchView?.clearFocus()
+            Functions.doInIoThreadWithObservingOnMain({
+                fetchFavicon(url)
+            }, {
+                iconView?.let { imageView ->
+                    Glide.with(applicationContext).load(it as Bitmap).into(imageView)
+                }
+            })
+        }
+    }
+
+    fun BrowserActivity.updateBottomNav() {
+        backwardBrowser?.apply {
+            when (browser!!.canGoBack()) {
+                false -> {
+                    alpha = 0.5f
+                    setOnClickListener(null)
+                    isClickable = false
+                }
+                true -> {
+                    alpha = 1f
+                    setOnClickListener { browser?.goBack() }
+                    isClickable = true
+                }
+            }
+        }
+
+        forwardBrowser?.apply {
+            when (browser!!.canGoForward()) {
+                false -> {
+                    alpha = 0.5f
+                    setOnClickListener(null)
+                    isClickable = false
+                }
+                true -> {
+                    alpha = 1f
+                    setOnClickListener { browser?.goForward() }
+                    isClickable = true
+                }
+            }
+        }
+    }
+
+    fun Context.updateTabs() {
+        if (getSetting(this, SAVE_TABS)) {
+            doInBackground {
+                val sp = getSharedPreferences(mainSharedPrefsKey, Context.MODE_PRIVATE)
+                val tempArray: ArrayList<String> = ArrayList()
+                for (i in openedTabs.indices) {
+                    if (i > openedTabs.lastIndex) break
+                    val item = openedTabs[i]
+                    val fullSnap = when (val snap = item.fullSnap?.toByteArray()) {
+                        null -> ContextCompat.getDrawable(this, R.drawable.skeleton)!!.getBitmap()!!
+                            .toByteArray()
+                        else -> snap
+                    }
+                    tempArray.add("$i$splitter${item.title}$splitter${item.url}$splitter${fullSnap.getString()}")
+                }
+
+                sp.setTabs(tempArray.toMutableSet())
+            }
+        }
+    }
+
+    private fun SharedPreferences.getTabs(): MutableSet<String> {
+        return getStringSet("tabsOpened", setOf())!!
+    }
+
+    private fun SharedPreferences.setTabs(tabs: MutableSet<String>) {
+        edit().putStringSet("tabsOpened", tabs).apply()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun Context.updateGestures() {
+        for (tab in openedTabs) tab.tab.updateBottomGestures(this)
+    }
+
+    fun AppCompatActivity.loadOpenedTabs(progressBar: LinearProgressIndicator? = null) {
+        if (getSetting(this, SAVE_TABS)) {
+            val sp = getSharedPreferences(mainSharedPrefsKey, Context.MODE_PRIVATE)
+            val tempArr: ArrayList<Pair<Int, BrowserTabItem>> = ArrayList()
+            for (data in sp.getTabs()) {
+                val dataArr = data.split(splitter)
+
+                val id = dataArr[0]
+                val title = dataArr[1]
+                val url = dataArr[2]
+                val fullSnap = dataArr[3].getByteArray()
+
+                val tab = BrowserView(this)
+                tab.webChromeClient = ChromeClient(this, progressBar, tab)
+                tab.webViewClient = WebClient(this, progressBar)
+                tab.loadUrl(url)
+                tempArr.add(
+                    Pair(
+                        Integer.parseInt(id),
+                        BrowserTabItem(byteArrayToBitmap(fullSnap), title, url, tab)
+                    )
+                )
+            }
+            tempArr.sortBy { it.first }
+            for (i in tempArr) openedTabs.add(i.second)
+        }
+    }
+
+    fun Bitmap.getCutSnap(context: Context): Bitmap? {
+        return if (width < height) {
+            if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                Bitmap.createBitmap(this, 0, 0, width, (width / 130f * 140f).toInt())
+            } else {
+                Bitmap.createBitmap(this, 0, 0, width, (width / 170f * 140f).toInt())
+            }
+        } else {
+            Bitmap.createBitmap(this, 0, 0, height, (height / 1.2).toInt())
+        }
+    }
+
+}

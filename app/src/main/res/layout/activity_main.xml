@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.MainActivity">
+
+    <include
+        android:id="@+id/recyclerInclude"
+        layout="@layout/content_main" />
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:imeOptions="actionSearch"
+        android:layoutDirection="rtl"
+        app:iconifiedByDefault="false"
+        app:queryHint="@string/typeHere" />
+
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_anchor="@id/bottomAppBar"
+        app:layout_anchorGravity="bottom">
+
+        <ImageButton
+            android:id="@+id/settingsButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple"
+            android:contentDescription="@string/none"
+            android:src="@drawable/ic_baseline_settings_24"
+            app:layout_constraintEnd_toStartOf="@id/currentPagesButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+        <ImageButton
+            android:id="@+id/currentPagesButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple"
+            android:contentDescription="@string/none"
+            android:src="@drawable/ic_baseline_view_carousel_24"
+            app:layout_constraintEnd_toEndOf="@id/fabDividerLeft"
+            app:layout_constraintStart_toEndOf="@id/settingsButton"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/fabDividerLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.41" />
+
+        <ru.tinkoff.scrollingpagerindicator.ScrollingPagerIndicator
+            android:id="@+id/indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/fabDividerRight"
+            app:layout_constraintStart_toStartOf="@id/fabDividerLeft" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/fabDividerRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.59" />
+
+        <ImageButton
+            android:id="@+id/historyButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple"
+            android:contentDescription="@string/none"
+            android:src="@drawable/ic_baseline_history_24"
+            app:layout_constraintEnd_toStartOf="@id/bookmarksButton"
+            app:layout_constraintStart_toEndOf="@id/fabDividerRight"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+        <ImageButton
+            android:id="@+id/bookmarksButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple"
+            android:contentDescription="@string/none"
+            android:src="@drawable/ic_baseline_bookmarks_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/historyButton"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/labelSuggestionCard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:translationY="1000dp"
+        app:cardElevation="0dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/labelRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <include
+        android:id="@+id/appBar"
+        layout="@layout/app_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageButton
+        android:id="@+id/backward"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="start"
+        android:background="@drawable/ripple"
+        android:contentDescription="@string/none"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:src="@drawable/ic_baseline_fast_rewind_24"
+        app:tint="?attr/colorSecondary" />
+
+    <ImageButton
+        android:id="@+id/forward"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="end"
+        android:background="@drawable/ripple"
+        android:contentDescription="@string/none"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:src="@drawable/ic_baseline_fast_forward_24"
+        app:tint="?attr/colorSecondary" />
+
+    <ImageButton
+        android:id="@+id/manageList"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="end"
+        android:background="@drawable/ripple"
+        android:contentDescription="@string/none"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:src="@drawable/ic_manage"
+        app:tint="?attr/colorSecondary" />
+
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="end"
+        android:background="@drawable/ripple"
+        android:contentDescription="@string/none"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:src="@drawable/ic_baseline_close_24"
+        app:tint="?attr/colorSecondary" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/none"
+        android:src="@drawable/ic_baseline_mic_24"
+        app:layout_anchor="@id/bottomAppBar" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
