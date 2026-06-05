@@ -40,7 +40,6 @@ class SettingsActivity : AppCompatActivity() {
         switchDesktopMode.isChecked = prefsManager.isDesktopMode()
         switchDesktopMode.setOnCheckedChangeListener { _, isChecked ->
             prefsManager.setDesktopMode(isChecked)
-            // Return result to MainActivity to apply changes
             setResult(RESULT_OK)
         }
 
@@ -71,7 +70,11 @@ class SettingsActivity : AppCompatActivity() {
 
         // Clear Cache
         findViewById<View>(R.id.layoutClearCache).setOnClickListener {
-            WebView(this).clearCache(true)
+            try {
+                WebView(this).clearCache(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             Toast.makeText(this, "Cache cleared", Toast.LENGTH_SHORT).show()
         }
 
@@ -90,7 +93,7 @@ class SettingsActivity : AppCompatActivity() {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
             tvVersion.text = pInfo.versionName
         } catch (e: Exception) {
-            tvVersion.text = "5.1.0"
+            tvVersion.text = "6.0.0"
         }
 
         // Remove Ads
@@ -102,7 +105,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun showDarkModeDialog(tvDarkMode: TextView) {
         val options = arrayOf("Auto (Follow System)", "On", "Off")
         val values = arrayOf("auto", "on", "off")
-        
+
         AlertDialog.Builder(this)
             .setTitle("Dark Mode")
             .setItems(options) { _, which ->
@@ -112,7 +115,6 @@ class SettingsActivity : AppCompatActivity() {
                     "off" -> "Off"
                     else -> "Auto"
                 }
-                // Return result to MainActivity to apply changes immediately
                 setResult(RESULT_OK)
                 Toast.makeText(this, "Dark mode applied", Toast.LENGTH_SHORT).show()
             }
@@ -169,6 +171,11 @@ class SettingsActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        super.onBackPressed()
     }
 
     override fun onSupportNavigateUp(): Boolean {
