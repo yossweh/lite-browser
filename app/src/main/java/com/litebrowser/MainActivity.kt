@@ -12,13 +12,16 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.webkit.*
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.gms.ads.AdView
 import com.litebrowser.adblock.AdBlocker
+import com.litebrowser.ads.AdManager
 import com.litebrowser.browser.TabManager
 import com.litebrowser.settings.SettingsActivity
 import com.litebrowser.utils.PrefsManager
@@ -33,12 +36,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnForward: ImageButton
     private lateinit var btnTabs: ImageButton
     private lateinit var btnMenu: ImageButton
+    private lateinit var adContainer: FrameLayout
 
     private lateinit var tabManager: TabManager
     private lateinit var adBlocker: AdBlocker
     private lateinit var prefsManager: PrefsManager
+    private lateinit var adManager: AdManager
 
     private var isAdBlockEnabled = true
+    private var bannerAdView: AdView? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,16 +60,19 @@ class MainActivity : AppCompatActivity() {
         btnForward = findViewById(R.id.btnForward)
         btnTabs = findViewById(R.id.btnTabs)
         btnMenu = findViewById(R.id.btnMenu)
+        adContainer = findViewById(R.id.adContainer)
 
         // Initialize managers
         tabManager = TabManager(this)
         adBlocker = AdBlocker(this)
         prefsManager = PrefsManager(this)
+        adManager = AdManager(this)
 
         isAdBlockEnabled = prefsManager.isAdBlockEnabled()
 
         setupWebView()
         setupListeners()
+        setupAds()
 
         // Load homepage
         val intentUrl = intent?.data?.toString()
@@ -72,6 +81,19 @@ class MainActivity : AppCompatActivity() {
         } else {
             loadUrl(prefsManager.getHomepage())
         }
+    }
+
+    private fun setupAds() {
+        // Initialize AdMob
+        adManager.initialize()
+        
+        // Add banner ad
+        bannerAdView = adManager.createBannerAd()
+        adContainer.addView(bannerAdView)
+        
+        // Load banner ad
+        val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
+        bannerAdView?.loadAd(adRequest)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -117,6 +139,9 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 swipeRefresh.isRefreshing = false
                 updateNavigationButtons()
+                
+                // Track page load for interstitial ads
+                adManager.onPageLoaded()
             }
 
             override fun shouldOverrideUrlLoading(
@@ -229,6 +254,7 @@ class MainActivity : AppCompatActivity() {
             "Share",
             "Find in Page",
             "Desktop Site",
+            "Remove Ads (Watch Ad)",
             "Settings"
         )
 
@@ -245,10 +271,35 @@ class MainActivity : AppCompatActivity() {
                     3 -> sharePage()
                     4 -> showFindInPage()
                     5 -> toggleDesktopSite()
-                    6 -> openSettings()
+                    6 -> showRewardedAd()
+                    7 -> openSettings()
                 }
             }
             .show()
+    }
+
+    private fun showRewardedAd() {
+        if (adManager.hasRewardedAd()) {
+            adManager.showRewarded {
+                // User watched ad, disable ads for this session
+                adContainer.visibility = View.GONE
+                bannerAdView?.destroy()
+                bannerAdView = null
+            }
+        } else {
+            AlertDialog.Builder(this)
+                .setTitle("Remove Ads")
+                .setMessage("Watch a short video to remove ads for this session?")
+                .setPositiveButton("Watch Ad") { _, _ ->
+                    adManager.showRewarded {
+                        adContainer.visibility = View.GONE
+                        bannerAdView?.destroy()
+                        bannerAdView = null
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
     }
 
     private fun showBookmarks() {
@@ -344,16 +395,20 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+        bannerAdView?.resume()
         isAdBlockEnabled = prefsManager.isAdBlockEnabled()
     }
 
     override fun onPause() {
         super.onPause()
         webView.onPause()
+        bannerAdView?.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        bannerAdView?.destroy()
         webView.destroy()
+        adManager.destroy()
     }
 }
