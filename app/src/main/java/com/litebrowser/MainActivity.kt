@@ -16,7 +16,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.ads.AdView
 import com.litebrowser.adblock.AdBlocker
@@ -59,10 +58,6 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Apply dark mode before setContentView
-        applyDarkMode()
-        
         setContentView(R.layout.activity_main)
 
         // Initialize views
@@ -101,14 +96,6 @@ class MainActivity : AppCompatActivity() {
             loadUrl(intentUrl)
         } else {
             loadUrl(prefsManager.getHomepage())
-        }
-    }
-
-    private fun applyDarkMode() {
-        when (prefsManager.getDarkMode()) {
-            "on" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            "off" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
     }
 
@@ -258,12 +245,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_SETTINGS) {
+        if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
             // Reload settings and apply changes
             isAdBlockEnabled = prefsManager.isAdBlockEnabled()
-            
-            // Apply dark mode changes immediately
-            applyDarkMode()
             
             // Apply user agent changes
             webView.settings.userAgentString = if (prefsManager.isDesktopMode()) {
