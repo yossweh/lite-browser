@@ -5,6 +5,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,30 +20,29 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build APKs
-      run: |
-        ./gradlew assembleDebug assembleRelease
-
-    - name: Verify APKs exist
-      run: |
-        ls -lh app/build/outputs/apk/debug/app-debug.apk
-        ls -lh app/build/outputs/apk/release/app-release-unsigned.apk || ls -lh app/build/outputs/apk/release/app-release.apk
-        # Verify signing
-        apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk || true
+      run: ./gradlew assembleDebug assembleRelease
 
     - name: Rename release APK
       run: |
         if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
           mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-release.apk
         fi
+        ls -lh app/build/outputs/apk/debug/
+        ls -lh app/build/outputs/apk/release/
 
-    - name: Upload APKs to Release
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: litebrowser-apks
+        path: |
+          app/build/outputs/apk/debug/app-debug.apk
+          app/build/outputs/apk/release/app-release.apk
+
+    - name: Create Release
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
@@ -48,6 +50,6 @@ jobs:
           app/build/outputs/apk/debug/app-debug.apk
           app/build/outputs/apk/release/app-release.apk
         tag_name: v2.0
-        name: LiteBrowser v2.0
+        name: LiteBrowser v2.0 - Signed & Working
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
