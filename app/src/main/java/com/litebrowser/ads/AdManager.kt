@@ -19,13 +19,17 @@ class AdManager(private val context: Context) {
         const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
         const val REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
         
-        // Show interstitial every N page loads
-        const val INTERSTITIAL_FREQUENCY = 5
+        // Show interstitial every N page loads (more conservative)
+        const val INTERSTITIAL_FREQUENCY = 15
+        
+        // Minimum time between interstitials (in milliseconds) - 3 minutes
+        const val MIN_INTERSTITIAL_INTERVAL = 180_000L
     }
 
     private var interstitialAd: InterstitialAd? = null
     private var rewardedAd: RewardedAd? = null
     private var pageLoadCount = 0
+    private var lastInterstitialTime = 0L
     private var isInitialized = false
 
     fun initialize() {
@@ -78,19 +82,28 @@ class AdManager(private val context: Context) {
 
     fun onPageLoaded() {
         pageLoadCount++
-        if (pageLoadCount % INTERSTITIAL_FREQUENCY == 0) {
+        val currentTime = System.currentTimeMillis()
+        val timeSinceLastAd = currentTime - lastInterstitialTime
+        
+        // Show interstitial if enough pages loaded AND enough time passed
+        if (pageLoadCount % INTERSTITIAL_FREQUENCY == 0 && 
+            (lastInterstitialTime == 0L || timeSinceLastAd > MIN_INTERSTITIAL_INTERVAL)) {
             showInterstitial()
         }
     }
 
     fun showInterstitial() {
         val activity = context as? Activity ?: return
-        interstitialAd?.show(activity)
-        // Preload next interstitial after showing
-        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                Log.d(TAG, "Interstitial dismissed")
-                loadInterstitial()
+        interstitialAd?.apply {
+            show(activity)
+            lastInterstitialTime = System.currentTimeMillis()
+            
+            // Preload next interstitial after showing
+            fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    Log.d(TAG, "Interstitial dismissed")
+                    loadInterstitial()
+                }
             }
         }
     }
