@@ -67,14 +67,14 @@ object SharedPreferencesAccess {
     fun loadTheme(context: Context): Int {
         return when (context.getSharedPreferences(mainSharedPrefsKey, Context.MODE_PRIVATE)
             .getString("theme", GREEN)) {
-            GREEN -> R.style.Theme_ESearch
-            RED -> R.style.Theme_ESearch_Red
-            PINK -> R.style.Theme_ESearch_Pink
-            ORANGE -> R.style.Theme_ESearch_Orange
-            VIOLET -> R.style.Theme_ESearch_Violet
-            YELLOW -> R.style.Theme_ESearch_Yellow
-            MINT -> R.style.Theme_ESearch_Mint
-            BLUE -> R.style.Theme_ESearch_Blue
+            GREEN -> R.style.Theme_LiteBrowser
+            RED -> R.style.Theme_LiteBrowser_Red
+            PINK -> R.style.Theme_LiteBrowser_Pink
+            ORANGE -> R.style.Theme_LiteBrowser_Orange
+            VIOLET -> R.style.Theme_LiteBrowser_Violet
+            YELLOW -> R.style.Theme_LiteBrowser_Yellow
+            MINT -> R.style.Theme_LiteBrowser_Mint
+            BLUE -> R.style.Theme_LiteBrowser_Blue
             else -> 0
         }
     }
