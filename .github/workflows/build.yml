@@ -23,38 +23,48 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Generate debug keystore
+      run: |
+        mkdir -p ~/.android
+        keytool -genkey -v -keystore ~/.android/debug.keystore \
+          -storepass android -alias androiddebugkey -keypass android \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -dname "CN=Android Debug,O=Android,C=US"
+
     - name: Build Debug APK
       run: ./gradlew assembleDebug
 
-    - name: Sign APK with v1+v2
+    - name: Verify & sign APK
       run: |
-        # Use apksigner from Android SDK build-tools
         BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
         echo "Using build-tools: $BUILD_TOOLS"
         
-        # The debug APK is already v2-signed by Gradle
-        # Add v1 signature using apksigner
-        APK_IN=app/build/outputs/apk/debug/app-debug.apk
-        APK_OUT=app/build/outputs/apk/debug/app-debug-signed.apk
+        APK=app/build/outputs/apk/debug/app-debug.apk
+        ls -lh $APK
         
-        # Copy and re-sign with both v1 and v2
-        cp $APK_IN $APK_OUT
+        # Verify current signing
+        echo "=== Current signing status ==="
+        ${BUILD_TOOLS}apksigner verify --verbose $APK || true
         
-        # Use the default debug keystore
-        ${BUILD_TOOLS}apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --key-pass pass:android $APK_OUT
+        # Re-sign with explicit v1+v2
+        ${BUILD_TOOLS}apksigner sign \
+          --ks ~/.android/debug.keystore \
+          --ks-pass pass:android \
+          --key-pass pass:android \
+          --v1-signing-enabled true \
+          --v2-signing-enabled true \
+          $APK
         
-        # Verify
-        ${BUILD_TOOLS}apksigner verify --verbose $APK_OUT
+        # Verify final signing
+        echo "=== Final signing status ==="
+        ${BUILD_TOOLS}apksigner verify --verbose $APK
         
-        # Replace original
-        mv $APK_OUT $APK_IN
-        
-        ls -lh $APK_IN
+        ls -lh $APK
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: litebrowser-debug
+        name: litebrowser
         path: app/build/outputs/apk/debug/app-debug.apk
 
     - name: Create Release
@@ -63,6 +73,6 @@ jobs:
       with:
         files: app/build/outputs/apk/debug/app-debug.apk
         tag_name: v4.0
-        name: LiteBrowser v4.0 - v1+v2 Signed
+        name: LiteBrowser v4.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
