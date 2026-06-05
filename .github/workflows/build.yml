@@ -29,6 +29,27 @@ jobs:
     - name: Build Release APK
       run: ./gradlew assembleRelease
 
+    - name: Sign Release APK with debug key
+      run: |
+        # Find the debug keystore
+        DEBUG_KEYSTORE=~/.android/debug.keystore
+        if [ ! -f "$DEBUG_KEYSTORE" ]; then
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore "$DEBUG_KEYSTORE" \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+        fi
+        
+        # Sign the release APK
+        cp app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-release.apk
+        cd app/build/outputs/apk/release
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+          -keystore "$DEBUG_KEYSTORE" \
+          -storepass android -keypass android \
+          app-release.apk androiddebugkey
+        cd -
+
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
@@ -39,7 +60,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: LiteBrowser-release
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
+        path: app/build/outputs/apk/release/app-release.apk
 
     - name: Create Release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
@@ -47,7 +68,7 @@ jobs:
       with:
         files: |
           app/build/outputs/apk/debug/app-debug.apk
-          app/build/outputs/apk/release/app-release-unsigned.apk
+          app/build/outputs/apk/release/app-release.apk
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
       env:
