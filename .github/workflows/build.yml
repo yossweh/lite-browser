@@ -26,10 +26,30 @@ jobs:
     - name: Build Debug APK
       run: ./gradlew assembleDebug
 
-    - name: Verify APK
+    - name: Sign APK with v1+v2
       run: |
-        ls -lh app/build/outputs/apk/debug/app-debug.apk
-        file app/build/outputs/apk/debug/app-debug.apk
+        # Use apksigner from Android SDK build-tools
+        BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
+        echo "Using build-tools: $BUILD_TOOLS"
+        
+        # The debug APK is already v2-signed by Gradle
+        # Add v1 signature using apksigner
+        APK_IN=app/build/outputs/apk/debug/app-debug.apk
+        APK_OUT=app/build/outputs/apk/debug/app-debug-signed.apk
+        
+        # Copy and re-sign with both v1 and v2
+        cp $APK_IN $APK_OUT
+        
+        # Use the default debug keystore
+        ${BUILD_TOOLS}apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --key-pass pass:android $APK_OUT
+        
+        # Verify
+        ${BUILD_TOOLS}apksigner verify --verbose $APK_OUT
+        
+        # Replace original
+        mv $APK_OUT $APK_IN
+        
+        ls -lh $APK_IN
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -42,7 +62,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: app/build/outputs/apk/debug/app-debug.apk
-        tag_name: v3.0
-        name: LiteBrowser v3.0
+        tag_name: v4.0
+        name: LiteBrowser v4.0 - v1+v2 Signed
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
