@@ -3,8 +3,6 @@ package com.litebrowser.settings
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebView
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -16,7 +14,6 @@ import com.litebrowser.utils.PrefsManager
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var prefsManager: PrefsManager
-    private var isAdvancedExpanded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,32 +35,24 @@ class SettingsActivity : AppCompatActivity() {
             prefsManager.setAdBlockEnabled(isChecked)
         }
 
-        // JavaScript toggle (in Advanced)
-        val switchJavascript = findViewById<Switch>(R.id.switchJavascript)
-        switchJavascript.isChecked = prefsManager.isJavascriptEnabled()
-        switchJavascript.setOnCheckedChangeListener { _, isChecked ->
-            prefsManager.setJavascriptEnabled(isChecked)
-        }
-
-        // Dark Mode toggle
-        val switchDarkMode = findViewById<Switch>(R.id.switchDarkMode)
-        switchDarkMode.isChecked = prefsManager.isDarkMode()
-        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            prefsManager.setDarkMode(isChecked)
-            Toast.makeText(this, "Restart app to apply dark mode", Toast.LENGTH_SHORT).show()
-        }
-
-        // Desktop Mode toggle
+        // Desktop Mode toggle (simple like Via Browser)
         val switchDesktopMode = findViewById<Switch>(R.id.switchDesktopMode)
-        switchDesktopMode.isChecked = prefsManager.getUserAgent().contains("Windows")
+        switchDesktopMode.isChecked = prefsManager.isDesktopMode()
         switchDesktopMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                prefsManager.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                prefsManager.setUserAgentName("Desktop")
-            } else {
-                prefsManager.setUserAgent("Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
-                prefsManager.setUserAgentName("Mobile")
-            }
+            prefsManager.setDesktopMode(isChecked)
+            // Return result to MainActivity to apply changes
+            setResult(RESULT_OK)
+        }
+
+        // Dark Mode (3 options: Auto/On/Off like Via Browser)
+        val tvDarkMode = findViewById<TextView>(R.id.tvDarkMode)
+        tvDarkMode.text = when (prefsManager.getDarkMode()) {
+            "on" -> "On"
+            "off" -> "Off"
+            else -> "Auto"
+        }
+        findViewById<View>(R.id.layoutDarkMode).setOnClickListener {
+            showDarkModeDialog(tvDarkMode)
         }
 
         // Homepage setting
@@ -78,24 +67,6 @@ class SettingsActivity : AppCompatActivity() {
         tvSearchEngine.text = prefsManager.getSearchEngineName()
         findViewById<View>(R.id.layoutSearchEngine).setOnClickListener {
             showSearchEngineDialog(tvSearchEngine)
-        }
-
-        // User Agent (Full) in Advanced
-        val tvUserAgentFull = findViewById<TextView>(R.id.tvUserAgentFull)
-        tvUserAgentFull.text = prefsManager.getUserAgentName()
-        findViewById<View>(R.id.layoutUserAgentFull).setOnClickListener {
-            showUserAgentDialog(tvUserAgentFull)
-        }
-
-        // Advanced section toggle
-        val layoutAdvancedHeader = findViewById<View>(R.id.layoutAdvancedHeader)
-        val layoutAdvancedContent = findViewById<LinearLayout>(R.id.layoutAdvancedContent)
-        val ivAdvancedArrow = findViewById<ImageView>(R.id.ivAdvancedArrow)
-
-        layoutAdvancedHeader.setOnClickListener {
-            isAdvancedExpanded = !isAdvancedExpanded
-            layoutAdvancedContent.visibility = if (isAdvancedExpanded) View.VISIBLE else View.GONE
-            ivAdvancedArrow.rotation = if (isAdvancedExpanded) 180f else 0f
         }
 
         // Clear Cache
@@ -119,13 +90,34 @@ class SettingsActivity : AppCompatActivity() {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
             tvVersion.text = pInfo.versionName
         } catch (e: Exception) {
-            tvVersion.text = "5.0.0"
+            tvVersion.text = "5.1.0"
         }
 
         // Remove Ads
         findViewById<View>(R.id.layoutRemoveAds).setOnClickListener {
             showRewardedAdDialog()
         }
+    }
+
+    private fun showDarkModeDialog(tvDarkMode: TextView) {
+        val options = arrayOf("Auto (Follow System)", "On", "Off")
+        val values = arrayOf("auto", "on", "off")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Dark Mode")
+            .setItems(options) { _, which ->
+                prefsManager.setDarkMode(values[which])
+                tvDarkMode.text = when (values[which]) {
+                    "on" -> "On"
+                    "off" -> "Off"
+                    else -> "Auto"
+                }
+                // Return result to MainActivity to apply changes immediately
+                setResult(RESULT_OK)
+                Toast.makeText(this, "Dark mode applied", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showHomepageDialog(tvHomepage: TextView) {
@@ -162,57 +154,6 @@ class SettingsActivity : AppCompatActivity() {
             .setItems(engines) { _, which ->
                 prefsManager.setSearchEngine(urls[which], engines[which])
                 tvSearchEngine.text = engines[which]
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showUserAgentDialog(tvUserAgent: TextView) {
-        val agents = arrayOf(
-            "Default (Mobile)",
-            "Chrome Desktop",
-            "Firefox Desktop",
-            "Safari iPhone",
-            "Custom"
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle("User Agent")
-            .setItems(agents) { _, which ->
-                val ua = when (which) {
-                    0 -> "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-                    1 -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                    2 -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
-                    3 -> "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-                    4 -> {
-                        showCustomUserAgentDialog(tvUserAgent)
-                        return@setItems
-                    }
-                    else -> return@setItems
-                }
-                prefsManager.setUserAgent(ua)
-                prefsManager.setUserAgentName(agents[which])
-                tvUserAgent.text = agents[which]
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showCustomUserAgentDialog(tvUserAgent: TextView) {
-        val editText = android.widget.EditText(this)
-        editText.setText(prefsManager.getUserAgent())
-        editText.hint = "Enter custom user agent"
-
-        AlertDialog.Builder(this)
-            .setTitle("Custom User Agent")
-            .setView(editText)
-            .setPositiveButton("Save") { _, _ ->
-                val ua = editText.text.toString().trim()
-                if (ua.isNotEmpty()) {
-                    prefsManager.setUserAgent(ua)
-                    prefsManager.setUserAgentName("Custom")
-                    tvUserAgent.text = "Custom"
-                }
             }
             .setNegativeButton("Cancel", null)
             .show()

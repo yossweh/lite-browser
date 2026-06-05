@@ -11,10 +11,10 @@ class PrefsManager(context: Context) {
         private const val KEY_AD_BLOCK = "ad_block"
         private const val KEY_HOMEPAGE = "homepage"
         private const val KEY_USER_AGENT = "user_agent"
-        private const val KEY_USER_AGENT_NAME = "user_agent_name"
         private const val KEY_SEARCH_ENGINE = "search_engine"
         private const val KEY_SEARCH_ENGINE_NAME = "search_engine_name"
         private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_DESKTOP_MODE = "desktop_mode"
         private const val KEY_JAVASCRIPT = "javascript"
         private const val KEY_BOOKMARKS = "bookmarks"
         private const val KEY_HISTORY = "history"
@@ -34,8 +34,9 @@ class PrefsManager(context: Context) {
         ?: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
     fun setUserAgent(ua: String) = prefs.edit().putString(KEY_USER_AGENT, ua).apply()
 
-    fun getUserAgentName(): String = prefs.getString(KEY_USER_AGENT_NAME, "Default (Mobile)") ?: "Default (Mobile)"
-    fun setUserAgentName(name: String) = prefs.edit().putString(KEY_USER_AGENT_NAME, name).apply()
+    // Desktop Mode (simple toggle like Via Browser)
+    fun isDesktopMode(): Boolean = prefs.getBoolean(KEY_DESKTOP_MODE, false)
+    fun setDesktopMode(enabled: Boolean) = prefs.edit().putBoolean(KEY_DESKTOP_MODE, enabled).apply()
 
     // Search Engine
     fun getSearchEngine(): String = prefs.getString(KEY_SEARCH_ENGINE, "https://www.google.com/search?q=") 
@@ -46,9 +47,9 @@ class PrefsManager(context: Context) {
     }
     fun getSearchEngineName(): String = prefs.getString(KEY_SEARCH_ENGINE_NAME, "Google") ?: "Google"
 
-    // Dark Mode
-    fun isDarkMode(): Boolean = prefs.getBoolean(KEY_DARK_MODE, false)
-    fun setDarkMode(enabled: Boolean) = prefs.edit().putBoolean(KEY_DARK_MODE, enabled).apply()
+    // Dark Mode (on/off/auto like Via Browser)
+    fun getDarkMode(): String = prefs.getString(KEY_DARK_MODE, "auto") ?: "auto"
+    fun setDarkMode(mode: String) = prefs.edit().putString(KEY_DARK_MODE, mode).apply()
 
     // JavaScript
     fun isJavascriptEnabled(): Boolean = prefs.getBoolean(KEY_JAVASCRIPT, true)
@@ -88,10 +89,7 @@ class PrefsManager(context: Context) {
     fun addHistory(url: String) {
         val history = getHistory().toMutableList()
         history.add(url)
-        // Keep only last 100 entries
-        if (history.size > 100) {
-            history.removeAt(0)
-        }
+        if (history.size > 100) history.removeAt(0)
         val historyStr = history.joinToString("|||")
         prefs.edit().putString(KEY_HISTORY, historyStr).apply()
     }

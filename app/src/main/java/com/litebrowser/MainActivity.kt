@@ -16,6 +16,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.ads.AdView
 import com.litebrowser.adblock.AdBlocker
@@ -51,9 +52,17 @@ class MainActivity : AppCompatActivity() {
     private var isAdBlockEnabled = true
     private var bannerAdView: AdView? = null
 
+    companion object {
+        private const val REQUEST_SETTINGS = 1001
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Apply dark mode before setContentView
+        applyDarkMode()
+        
         setContentView(R.layout.activity_main)
 
         // Initialize views
@@ -95,15 +104,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyDarkMode() {
+        when (prefsManager.getDarkMode()) {
+            "on" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            "off" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
+    }
+
     private fun setupAds() {
-        // Initialize AdMob
         adManager.initialize()
-        
-        // Add banner ad
         bannerAdView = adManager.createBannerAd()
         adContainer.addView(bannerAdView)
-        
-        // Load banner ad
         val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
         bannerAdView?.loadAd(adRequest)
     }
@@ -111,7 +123,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         webView.settings.apply {
-            javaScriptEnabled = true
+            javaScriptEnabled = prefsManager.isJavascriptEnabled()
             domStorageEnabled = true
             databaseEnabled = true
             allowFileAccess = true
@@ -123,7 +135,16 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             cacheMode = WebSettings.LOAD_DEFAULT
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            userAgentString = prefsManager.getUserAgent()
+            
+            // Apply user agent
+            userAgentString = if (prefsManager.isDesktopMode()) {
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            } else {
+                prefsManager.getUserAgent()
+            }
+            
+            // Apply dark mode to WebView
+            applyWebViewDarkMode(this)
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -151,8 +172,6 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 swipeRefresh.isRefreshing = false
                 updateNavigationButtons()
-                
-                // Track page load for interstitial ads
                 adManager.onPageLoaded()
             }
 
@@ -194,8 +213,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyWebViewDarkMode(settings: WebSettings) {
+        // Enable dark mode for WebView content
+        if (prefsManager.getDarkMode() == "on") {
+            // Force dark mode on website content
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                settings.isAlgorithmicDarkeningAllowed = true
+            }
+        } else if (prefsManager.getDarkMode() == "off") {
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                settings.isAlgorithmicDarkeningAllowed = false
+            }
+        }
+        // For "auto", let system decide
+    }
+
     private fun setupListeners() {
-        // URL bar
         urlBar.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_GO ||
                 (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
@@ -206,27 +239,48 @@ class MainActivity : AppCompatActivity() {
         }
 
         urlBar.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                urlBar.selectAll()
-            }
+            if (hasFocus) urlBar.selectAll()
         }
 
-        // Navigation buttons
         btnBack.setOnClickListener { webView.goBack() }
         btnForward.setOnClickListener { webView.goForward() }
-
-        // Tabs button
         btnTabs.setOnClickListener { showTabsDialog() }
-
-        // Swipe refresh
         swipeRefresh.setOnRefreshListener { webView.reload() }
 
-        // Bottom navigation
         btnHome.setOnClickListener { loadUrl(prefsManager.getHomepage()) }
         btnBookmarks.setOnClickListener { showBookmarks() }
         btnHistory.setOnClickListener { showHistory() }
         btnShare.setOnClickListener { sharePage() }
-        btnSettings.setOnClickListener { openSettings() }
+        btnSettings.setOnClickListener { 
+            startActivityForResult(Intent(this, SettingsActivity::class.java), REQUEST_SETTINGS)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SETTINGS) {
+            // Reload settings and apply changes
+            isAdBlockEnabled = prefsManager.isAdBlockEnabled()
+            
+            // Apply dark mode changes immediately
+            applyDarkMode()
+            
+            // Apply user agent changes
+            webView.settings.userAgentString = if (prefsManager.isDesktopMode()) {
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            } else {
+                prefsManager.getUserAgent()
+            }
+            
+            // Apply JavaScript setting
+            webView.settings.javaScriptEnabled = prefsManager.isJavascriptEnabled()
+            
+            // Apply WebView dark mode
+            applyWebViewDarkMode(webView.settings)
+            
+            // Reload current page to apply changes
+            webView.reload()
+        }
     }
 
     private fun loadUrl(input: String) {
@@ -248,10 +302,9 @@ class MainActivity : AppCompatActivity() {
         val tabs = tabManager.getTabs()
         val currentUrl = webView.url ?: ""
 
-        val items = tabs.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("Tabs")
-            .setItems(items) { _, which ->
+            .setItems(tabs.toTypedArray()) { _, which ->
                 loadUrl(tabs[which])
             }
             .setPositiveButton("New Tab") { _, _ ->
@@ -279,11 +332,9 @@ class MainActivity : AppCompatActivity() {
                 .show()
             return
         }
-
-        val names = bookmarks.map { it.first }.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("Bookmarks")
-            .setItems(names) { _, which ->
+            .setItems(bookmarks.map { it.first }.toTypedArray()) { _, which ->
                 loadUrl(bookmarks[which].second)
             }
             .setPositiveButton("Close", null)
@@ -300,12 +351,10 @@ class MainActivity : AppCompatActivity() {
                 .show()
             return
         }
-
-        val items = history.takeLast(20).reversed().toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("History")
-            .setItems(items) { _, which ->
-                loadUrl(items[which])
+            .setItems(history.takeLast(20).reversed().toTypedArray()) { _, which ->
+                loadUrl(history.takeLast(20).reversed()[which])
             }
             .setPositiveButton("Clear History") { _, _ ->
                 prefsManager.clearHistory()
@@ -321,16 +370,9 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(shareIntent, "Share via"))
     }
 
-    private fun openSettings() {
-        startActivity(Intent(this, SettingsActivity::class.java))
-    }
-
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+        if (webView.canGoBack()) webView.goBack()
+        else super.onBackPressed()
     }
 
     override fun onResume() {
