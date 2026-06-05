@@ -85,9 +85,13 @@ class AdManager(private val context: Context) {
 
     fun showInterstitial() {
         val activity = context as? Activity ?: return
-        interstitialAd?.show(activity) {
-            Log.d(TAG, "Interstitial dismissed")
-            loadInterstitial() // Preload next
+        interstitialAd?.show(activity)
+        // Preload next interstitial after showing
+        interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                Log.d(TAG, "Interstitial dismissed")
+                loadInterstitial()
+            }
         }
     }
 
