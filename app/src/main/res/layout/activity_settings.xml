@@ -110,11 +110,11 @@
 
         </LinearLayout>
 
-        <!-- Section: Privacy & Security -->
+        <!-- Section: Privacy and Security -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Privacy & Security"
+            android:text="Privacy and Security"
             android:textSize="14sp"
             android:textColor="@color/text_hint"
             android:fontFamily="sans-serif-medium"
