@@ -688,18 +688,45 @@ class BrowserActivity : AppCompatActivity() {
     // ==================== ADMOB ====================
 
     private fun setupAdMob() {
-        // Banner ad
-        val adView = AdView(this).apply {
-            adUnitId = "ca-app-pub-4257841906902155/8996921138"
-            setAdSize(AdSize.BANNER)
+        // Adstera banner via WebView
+        val bannerWebView = WebView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+            isVerticalScrollBarEnabled = false
+            isHorizontalScrollBarEnabled = false
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
         }
-        adContainer.addView(adView)
-        adView.loadAd(AdRequest.Builder().build())
-
-        // Load interstitial
-        AdManager.loadInterstitial(this)
         
-        // Load rewarded ad
+        val adHtml = """
+            <!DOCTYPE html>
+            <html>
+            <head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+            <body style="margin:0;padding:0;display:flex;justify-content:center;">
+            <script>
+              atOptions = {
+                'key' : 'ad0e7ff6e4a5a14690530faa7a4dc390',
+                'format' : 'iframe',
+                'height' : 50,
+                'width' : 320,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/ad0e7ff6e4a5a14690530faa7a4dc390/invoke.js"></script>
+            </body>
+            </html>
+        """.trimIndent()
+        
+        bannerWebView.loadDataWithBaseURL("https://litebrowser.com", adHtml, "text/html", "UTF-8", null)
+        adContainer.addView(bannerWebView)
+
+        // Also load interstitial + rewarded as backup
+        AdManager.loadInterstitial(this)
         AdManager.loadRewarded(this)
     }
 
