@@ -551,27 +551,7 @@ class BrowserActivity : AppCompatActivity() {
             return
         }
 
-        // Show Adstera ad in full-screen WebView as rewarded
-        val dialog = AlertDialog.Builder(this, R.style.Theme_LiteBrowser)
-            .setTitle("🎁 Watch Ad for Premium")
-            .setMessage("Watch this ad for 30 minutes ad-free browsing")
-            .setPositiveButton("Watch Ad", null)
-            .setNegativeButton("Cancel", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                showAdsteraRewarded {
-                    rewardedUntil = System.currentTimeMillis() + 30 * 60 * 1000L
-                    Toast.makeText(this, "🎁 Premium active! No ads for 30 minutes", Toast.LENGTH_LONG).show()
-                    dialog.dismiss()
-                }
-            }
-        }
-        dialog.show()
-    }
-
-    private fun showAdsteraRewarded(onComplete: () -> Unit) {
+        // Show single full-screen rewarded dialog
         val rewardedWebView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -587,16 +567,17 @@ class BrowserActivity : AppCompatActivity() {
             <style>
               body { margin:0; padding:20px; background:#1a1a2e; color:white; 
                      font-family:sans-serif; text-align:center; }
-              .timer { font-size:32px; margin:20px 0; color:#00d4ff; }
+              .title { font-size:20px; margin-bottom:10px; }
+              .timer { font-size:48px; margin:20px 0; color:#00d4ff; }
               .ad-box { margin:20px auto; max-width:320px; }
-              .close-btn { display:none; margin:20px auto; padding:12px 24px; 
-                          font-size:16px; background:#00d4ff; color:#000; 
-                          border:none; border-radius:8px; cursor:pointer; }
-              p { color:#aaa; }
+              .close-btn { display:none; margin:20px auto; padding:14px 32px; 
+                          font-size:18px; background:#00d4ff; color:#000; 
+                          font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
+              p { color:#aaa; font-size:14px; }
             </style>
             </head>
             <body>
-            <p>Ad is loading...</p>
+            <div class="title">🎁 Watch Ad for Free Premium</div>
             <div class="timer" id="timer">10</div>
             <p>seconds remaining</p>
             <div class="ad-box">
@@ -611,7 +592,7 @@ class BrowserActivity : AppCompatActivity() {
             </script>
             <script src="https://www.highperformanceformat.com/ad0e7ff6e4a5a14690530faa7a4dc390/invoke.js"></script>
             </div>
-            <button class="close-btn" id="closeBtn" onclick="Android.close()">✅ Claim Premium</button>
+            <button class="close-btn" id="closeBtn" onclick="Android.close()">✅ Claim Premium - No Ads 30 Min</button>
             <script>
               var seconds = 10;
               var interval = setInterval(function() {
@@ -628,28 +609,41 @@ class BrowserActivity : AppCompatActivity() {
             </html>
         """.trimIndent()
 
+        var dialogDismissed = false
+        val dialog = AlertDialog.Builder(this, R.style.Theme_LiteBrowser)
+            .setView(rewardedWebView)
+            .setCancelable(true)
+            .create()
+
         rewardedWebView.addJavascriptInterface(object {
             @android.webkit.JavascriptInterface
             fun close() {
-                runOnUiThread { onComplete() }
+                if (dialogDismissed) return
+                dialogDismissed = true
+                runOnUiThread {
+                    rewardedUntil = System.currentTimeMillis() + 30 * 60 * 1000L
+                    dialog.dismiss()
+                    Toast.makeText(this@BrowserActivity, "🎁 Premium active! No ads for 30 minutes", Toast.LENGTH_LONG).show()
+                }
             }
         }, "Android")
 
-        val dialog = AlertDialog.Builder(this, R.style.Theme_LiteBrowser)
-            .setView(rewardedWebView)
-            .setCancelable(false)
-            .create()
-        
+        dialog.setOnDismissListener {
+            rewardedWebView.destroy()
+        }
+
         rewardedWebView.loadDataWithBaseURL("https://litebrowser.com", adHtml, "text/html", "UTF-8", null)
         dialog.show()
-        
-        // Auto-dismiss after 30s as safety
+
+        // Safety: auto-grant after 20s if user didn't click
         rewardedWebView.postDelayed({
-            if (dialog.isShowing) {
+            if (!dialogDismissed && dialog.isShowing) {
+                dialogDismissed = true
+                rewardedUntil = System.currentTimeMillis() + 30 * 60 * 1000L
                 dialog.dismiss()
-                onComplete()
+                Toast.makeText(this, "🎁 Premium active! No ads for 30 minutes", Toast.LENGTH_LONG).show()
             }
-        }, 35000)
+        }, 20000)
     }
 
     // ==================== DARK MODE ====================
