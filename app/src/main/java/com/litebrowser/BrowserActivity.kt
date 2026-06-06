@@ -73,6 +73,7 @@ class BrowserActivity : AppCompatActivity() {
     private lateinit var urlBar: EditText
     private lateinit var goButton: ImageButton
     private lateinit var btnRefresh: ImageButton
+    private lateinit var btnHome: ImageButton
     private lateinit var progressBar: ProgressBar
     private lateinit var webContainer: FrameLayout
     private lateinit var btnBack: View
@@ -113,6 +114,7 @@ class BrowserActivity : AppCompatActivity() {
         urlBar = findViewById(R.id.url_bar)
         goButton = findViewById(R.id.btn_go)
         btnRefresh = findViewById(R.id.btn_refresh)
+        btnHome = findViewById(R.id.btn_home)
         progressBar = findViewById(R.id.progress_bar)
         webContainer = findViewById(R.id.web_container)
         btnBack = findViewById(R.id.btn_back)
@@ -138,6 +140,7 @@ class BrowserActivity : AppCompatActivity() {
 
         goButton.setOnClickListener { loadUrlFromBar() }
         btnRefresh.setOnClickListener { getCurrentWebView()?.reload() }
+        btnHome.setOnClickListener { getCurrentWebView()?.loadUrl(PrefManager.homepage.ifEmpty { "https://www.google.com" }) }
 
         btnBack.setOnClickListener { getCurrentWebView()?.goBack() }
         btnForward.setOnClickListener { getCurrentWebView()?.goForward() }
