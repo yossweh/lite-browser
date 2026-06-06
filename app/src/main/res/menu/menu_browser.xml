@@ -3,14 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_new_tab"
+        android:title="New Tab"
+        android:icon="@drawable/ic_new_tab"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_refresh"
         android:title="Refresh"
         android:icon="@drawable/ic_refresh"
-        app:showAsAction="never" />
-        android:id="@+id/action_new_tab"
-        android:title="New Tab"
-        android:icon="@drawable/ic_new_tab"
         app:showAsAction="never" />
 
     <item
