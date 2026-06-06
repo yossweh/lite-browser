@@ -1,8 +1,8 @@
-name: Build APK
+name: Build & Release
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -11,85 +11,49 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: Generate debug keystore
+        run: |
+          keytool -genkeypair \
+            -alias androiddebugkey \
+            -keypass android \
+            -keystore debug.keystore \
+            -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000
 
-    - name: Generate debug keystore
-      run: |
-        mkdir -p ~/.android
-        keytool -genkey -v -keystore ~/.android/debug.keystore \
-          -storepass android -alias androiddebugkey -keypass android \
-          -keyalg RSA -keysize 2048 -validity 10000 \
-          -dname "CN=Android Debug,O=Android,C=US"
+      - name: Build APK
+        run: ./gradlew assembleDebug
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --no-daemon
+      - name: Sign APK
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/LiteBrowser-unsigned.apk
+          apksigner sign \
+            --ks debug.keystore \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --out app/build/outputs/apk/debug/LiteBrowser-v${{ github.run_number }}.apk \
+            app/build/outputs/apk/debug/LiteBrowser-unsigned.apk
 
-    - name: Verify & sign APK
-      run: |
-        BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
-        echo "Using build-tools: $BUILD_TOOLS"
-        
-        APK=app/build/outputs/apk/debug/app-debug.apk
-        ls -lh $APK
-        
-        # Verify current signing
-        echo "=== Current signing status ==="
-        ${BUILD_TOOLS}apksigner verify --verbose $APK || true
-        
-        # Re-sign with explicit v1+v2
-        ${BUILD_TOOLS}apksigner sign \
-          --ks ~/.android/debug.keystore \
-          --ks-pass pass:android \
-          --key-pass pass:android \
-          --v1-signing-enabled true \
-          --v2-signing-enabled true \
-          $APK
-        
-        # Verify final signing
-        echo "=== Final signing status ==="
-        ${BUILD_TOOLS}apksigner verify --verbose $APK
-        
-        ls -lh $APK
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: litebrowser
-        path: app/build/outputs/apk/debug/app-debug.apk
-
-    - name: Create Release
-      if: github.event_name == 'push'
-      uses: softprops/action-gh-release@v2
-      with:
-        files: app/build/outputs/apk/debug/app-debug.apk
-        tag_name: v7.0
-        name: LiteBrowser v7.0 (ESearch Fork)
-        body: |
-          ## LiteBrowser v7.0
-          
-          Forked from ESearch (Apache 2.0 License) - all features working!
-          
-          ### Features:
-          - 🌐 Full tab management with thumbnails
-          - 🚫 Built-in ad blocker
-          - 🌙 Dark mode support
-          - 📱 Desktop/Mobile UA toggle
-          - 📥 Download manager
-          - 🔖 Bookmarks & History
-          - ⚡ Lightweight & fast
-          - 🎨 Material Design UI
-          
-          ### Credit:
-          Based on [ESearch](https://github.com/T8RIN/ESearch) by T8RIN (Apache 2.0)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: LiteBrowser v${{ github.run_number }}
+          files: app/build/outputs/apk/debug/LiteBrowser-v${{ github.run_number }}.apk
+          generate_release_notes: true
