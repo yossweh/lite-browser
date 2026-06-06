@@ -74,11 +74,11 @@ class BrowserActivity : AppCompatActivity() {
     private lateinit var goButton: ImageButton
     private lateinit var progressBar: ProgressBar
     private lateinit var webContainer: FrameLayout
-    private lateinit var btnBack: ImageButton
-    private lateinit var btnForward: ImageButton
-    private lateinit var btnShare: ImageButton
-    private lateinit var btnTabs: ImageButton
-    private lateinit var btnMenu: ImageButton
+    private lateinit var btnBack: View
+    private lateinit var btnForward: View
+    private lateinit var btnShare: View
+    private lateinit var btnTabs: View
+    private lateinit var btnMenu: View
     private lateinit var tabCountBadge: TextView
     private lateinit var adContainer: FrameLayout
 
