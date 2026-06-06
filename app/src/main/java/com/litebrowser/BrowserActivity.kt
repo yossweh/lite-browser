@@ -86,6 +86,7 @@ class BrowserActivity : AppCompatActivity() {
     // AdMob
     private var pageLoadCount = 0
     private var lastInterstitialTime = 0L
+    private var rewardedUntil = 0L // timestamp until which interstitials are disabled
 
     // Download pending
     private var pendingUrl = ""
@@ -286,10 +287,11 @@ class BrowserActivity : AppCompatActivity() {
                 this.url = url ?: ""
             }
 
-            // Interstitial ad logic
+            // Interstitial ad logic (skip if rewarded premium active)
             pageLoadCount++
             val now = System.currentTimeMillis()
-            if (pageLoadCount % INTERSTITIAL_PAGE_THRESHOLD == 0 &&
+            if (now > rewardedUntil && // not in reward period
+                pageLoadCount % INTERSTITIAL_PAGE_THRESHOLD == 0 &&
                 (lastInterstitialTime == 0L || now - lastInterstitialTime > INTERSTITIAL_COOLDOWN_MS)
             ) {
                 AdManager.showInterstitial(this@BrowserActivity)
@@ -416,6 +418,7 @@ class BrowserActivity : AppCompatActivity() {
                 R.id.action_add_bookmark -> addCurrentBookmark()
                 R.id.action_desktop_mode -> toggleDesktopMode()
                 R.id.action_dark_mode -> toggleDarkMode()
+                R.id.action_watch_ad -> showRewardedAdForPremium()
                 R.id.action_settings -> {
                     startActivity(Intent(this, SettingsActivity::class.java))
                 }
@@ -536,6 +539,25 @@ class BrowserActivity : AppCompatActivity() {
             if (tabInfo.isDesktopMode) "Desktop mode ON" else "Desktop mode OFF",
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    // ==================== REWARDED AD (FREE PREMIUM) ====================
+
+    private fun showRewardedAdForPremium() {
+        val remaining = rewardedUntil - System.currentTimeMillis()
+        if (remaining > 0) {
+            val mins = (remaining / 60000).toInt()
+            Toast.makeText(this, "🎁 Premium active! ${mins}min remaining", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        AdManager.showRewarded(this) {
+            // Reward: 30 minutes without interstitial ads
+            rewardedUntil = System.currentTimeMillis() + 30 * 60 * 1000L
+            Toast.makeText(this, "🎁 Premium active! No ads for 30 minutes", Toast.LENGTH_LONG).show()
+            // Pre-load next rewarded ad
+            AdManager.loadRewarded(this)
+        }
     }
 
     // ==================== DARK MODE ====================
@@ -676,6 +698,9 @@ class BrowserActivity : AppCompatActivity() {
 
         // Load interstitial
         AdManager.loadInterstitial(this)
+        
+        // Load rewarded ad
+        AdManager.loadRewarded(this)
     }
 
     // ==================== INTENT HANDLING ====================

@@ -41,6 +41,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_watch_ad"
+        android:title="🎁 Free Premium (Watch Ad)"
+        android:icon="@drawable/ic_gift"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_settings"
         android:title="Settings"
         android:icon="@drawable/ic_settings"
