@@ -20,10 +20,10 @@ object AdManager {
 
     private const val TAG = "AdManager"
 
-    // Test ad unit IDs (replace with real ones for production)
-    const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
-    const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
-    const val REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
+    // Production ad unit IDs
+    const val BANNER_AD_UNIT_ID = "ca-app-pub-4257841906902155/8996921138"
+    const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-4257841906902155/5843613957"
+    const val REWARDED_AD_UNIT_ID = "ca-app-pub-4257841906902155/9591287272"
 
     // Interstitial frequency control
     private const val INTERSTITIAL_PAGE_LOAD_INTERVAL = 15

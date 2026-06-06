@@ -690,7 +690,7 @@ class BrowserActivity : AppCompatActivity() {
     private fun setupAdMob() {
         // Banner ad
         val adView = AdView(this).apply {
-            adUnitId = "ca-app-pub-3940256099942544/6300978111"
+            adUnitId = "ca-app-pub-4257841906902155/8996921138"
             setAdSize(AdSize.BANNER)
         }
         adContainer.addView(adView)
