@@ -60,7 +60,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:src="@drawable/ic_home"
                         android:contentDescription="Homepage icon" />
 
                     <LinearLayout
@@ -90,7 +90,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_more"
+                        android:src="@drawable/ic_search"
                         android:contentDescription="Edit" />
 
                 </LinearLayout>
@@ -118,7 +118,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_search"
+                        android:src="@drawable/ic_search"
                         android:contentDescription="Search engine icon" />
 
                     <LinearLayout
@@ -148,7 +148,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_more"
+                        android:src="@drawable/ic_search"
                         android:contentDescription="Edit" />
 
                 </LinearLayout>
@@ -172,7 +172,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_block"
+                        android:src="@drawable/ic_close"
                         android:contentDescription="Ad blocker icon" />
 
                     <TextView
@@ -210,7 +210,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_view"
+                        android:src="@drawable/ic_dark_mode"
                         android:contentDescription="Dark mode icon" />
 
                     <TextView
@@ -248,7 +248,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_computer"
+                        android:src="@drawable/ic_desktop"
                         android:contentDescription="Desktop mode icon" />
 
                     <TextView
@@ -301,7 +301,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_recent_history"
+                        android:src="@drawable/ic_back"
                         android:contentDescription="Clear history icon" />
 
                     <TextView
@@ -336,7 +336,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_delete"
+                        android:src="@drawable/ic_close"
                         android:contentDescription="Clear cookies icon" />
 
                     <TextView
@@ -378,7 +378,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_info_details"
+                        android:src="@drawable/ic_settings"
                         android:contentDescription="Version icon" />
 
                     <LinearLayout
@@ -427,7 +427,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_share"
+                        android:src="@drawable/ic_share"
                         android:contentDescription="GitHub icon" />
 
                     <TextView
