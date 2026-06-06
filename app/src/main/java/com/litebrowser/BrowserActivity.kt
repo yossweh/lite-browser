@@ -72,6 +72,7 @@ class BrowserActivity : AppCompatActivity() {
     // UI
     private lateinit var urlBar: EditText
     private lateinit var goButton: ImageButton
+    private lateinit var btnRefresh: ImageButton
     private lateinit var progressBar: ProgressBar
     private lateinit var webContainer: FrameLayout
     private lateinit var btnBack: View
@@ -110,6 +111,7 @@ class BrowserActivity : AppCompatActivity() {
     private fun initViews() {
         urlBar = findViewById(R.id.url_bar)
         goButton = findViewById(R.id.btn_go)
+        btnRefresh = findViewById(R.id.btn_refresh)
         progressBar = findViewById(R.id.progress_bar)
         webContainer = findViewById(R.id.web_container)
         btnBack = findViewById(R.id.btn_back)
@@ -134,6 +136,7 @@ class BrowserActivity : AppCompatActivity() {
         urlBar.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) urlBar.selectAll() }
 
         goButton.setOnClickListener { loadUrlFromBar() }
+        btnRefresh.setOnClickListener { getCurrentWebView()?.reload() }
 
         btnBack.setOnClickListener { getCurrentWebView()?.goBack() }
         btnForward.setOnClickListener { getCurrentWebView()?.goForward() }
@@ -272,6 +275,11 @@ class BrowserActivity : AppCompatActivity() {
             super.onPageFinished(view, url)
             progressBar.visibility = View.GONE
 
+            // Apply dark mode CSS if enabled
+            if (PrefManager.darkMode) {
+                view?.let { injectDarkModeCSS(it, true) }
+            }
+
             // Update tab title
             tabInfoList.find { it.id == activeTabId }?.apply {
                 title = view?.title ?: "New Tab"
@@ -400,6 +408,7 @@ class BrowserActivity : AppCompatActivity() {
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                R.id.action_refresh -> getCurrentWebView()?.reload()
                 R.id.action_new_tab -> {
                     newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
                 }
@@ -510,8 +519,16 @@ class BrowserActivity : AppCompatActivity() {
         tabInfo.isDesktopMode = !tabInfo.isDesktopMode
 
         val webView = getCurrentWebView() ?: return
-        webView.settings.userAgentString =
-            if (tabInfo.isDesktopMode) DESKTOP_USER_AGENT else null
+        if (tabInfo.isDesktopMode) {
+            webView.settings.userAgentString = DESKTOP_USER_AGENT
+            webView.settings.useWideViewPort = true
+            webView.settings.loadWithOverviewMode = true
+        } else {
+            // Reset to default mobile UA
+            webView.settings.userAgentString = WebSettings.getDefaultUserAgent(this)
+            webView.settings.useWideViewPort = true
+            webView.settings.loadWithOverviewMode = true
+        }
         webView.reload()
 
         Toast.makeText(
@@ -537,6 +554,7 @@ class BrowserActivity : AppCompatActivity() {
     private fun applyDarkMode(webView: WebView?) {
         webView ?: return
         if (PrefManager.darkMode) {
+            // Try native force dark first
             if (Build.VERSION.SDK_INT >= 33) {
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                     WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, true)
@@ -546,6 +564,8 @@ class BrowserActivity : AppCompatActivity() {
                     WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_ON)
                 }
             }
+            // Inject dark mode CSS as fallback
+            injectDarkModeCSS(webView, true)
         } else {
             if (Build.VERSION.SDK_INT >= 33) {
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
@@ -556,6 +576,37 @@ class BrowserActivity : AppCompatActivity() {
                     WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_OFF)
                 }
             }
+            injectDarkModeCSS(webView, false)
+        }
+    }
+
+    private fun injectDarkModeCSS(webView: WebView, enable: Boolean) {
+        if (enable) {
+            val css = """
+                (function() {
+                    var style = document.getElementById('litebrowser-dark-css');
+                    if (!style) {
+                        style = document.createElement('style');
+                        style.id = 'litebrowser-dark-css';
+                        style.textContent = `
+                            html { filter: invert(85%) hue-rotate(180deg) !important; }
+                            img, video, iframe, canvas, svg, [style*="background-image"] {
+                                filter: invert(100%) hue-rotate(180deg) !important;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+                })();
+            """.trimIndent()
+            webView.evaluateJavascript(css, null)
+        } else {
+            val css = """
+                (function() {
+                    var style = document.getElementById('litebrowser-dark-css');
+                    if (style) style.remove();
+                })();
+            """.trimIndent()
+            webView.evaluateJavascript(css, null)
         }
     }
 

@@ -21,4 +21,5 @@
     <string name="delete">Delete</string>
     <string name="close_tab">Close Tab</string>
     <string name="tab_counter">%d</string>
+    <string name="refresh">Refresh</string>
 </resources>
