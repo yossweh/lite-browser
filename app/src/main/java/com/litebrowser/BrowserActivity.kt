@@ -1,6 +1,5 @@
 package com.litebrowser
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.ClipData
@@ -8,20 +7,15 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.ContextMenu
-import android.view.Gravity
 import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.CookieManager
@@ -40,25 +34,23 @@ import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
-import com.google.android.gms.ads.LoadAdError
-import com.litebrowser.db.AppDatabase
-import com.litebrowser.db.Bookmark
+import com.litebrowser.data.AppDatabase
+import com.litebrowser.data.Bookmark
+import com.litebrowser.data.TabInfo
 import com.litebrowser.helper.AdBlocker
 import com.litebrowser.helper.AdManager
 import com.litebrowser.helper.PrefManager
-import com.litebrowser.model.TabInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -67,7 +59,7 @@ class BrowserActivity : AppCompatActivity() {
     companion object {
         private const val PERMISSION_REQUEST_DOWNLOAD = 1001
         private const val INTERSTITIAL_PAGE_THRESHOLD = 15
-        private const val INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000L // 3 minutes
+        private const val INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000L
         private const val DESKTOP_USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
@@ -75,15 +67,13 @@ class BrowserActivity : AppCompatActivity() {
     // Tab management
     private val tabs = HashMap<String, WebView>()
     private val tabInfoList = mutableListOf<TabInfo>()
-    private var activeTabId: String = ""
+    private var activeTabId = ""
 
-    // UI elements
-    private lateinit var toolbarContainer: View
+    // UI
     private lateinit var urlBar: EditText
     private lateinit var goButton: ImageButton
     private lateinit var progressBar: ProgressBar
-    private lateinit var tabContentContainer: FrameLayout
-    private lateinit var bottomNavBar: View
+    private lateinit var webContainer: FrameLayout
     private lateinit var btnBack: ImageButton
     private lateinit var btnForward: ImageButton
     private lateinit var btnShare: ImageButton
@@ -93,41 +83,35 @@ class BrowserActivity : AppCompatActivity() {
     private lateinit var adContainer: FrameLayout
 
     // AdMob
-    private var interstitialAd: InterstitialAd? = null
     private var pageLoadCount = 0
     private var lastInterstitialTime = 0L
 
-    // Pending download info
-    private var pendingDownloadUrl: String = ""
-    private var pendingDownloadContentDisposition: String = ""
-    private var pendingDownloadMimeType: String = ""
+    // Download pending
+    private var pendingUrl = ""
+    private var pendingDisposition = ""
+    private var pendingMime = ""
 
     private val scope = CoroutineScope(Dispatchers.Main)
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browser)
 
         initViews()
         setupClickListeners()
-        loadInterstitialAd()
-        loadBannerAd()
+        setupAdMob()
 
-        // Handle incoming VIEW intent
         val intentUrl = handleIncomingIntent(intent)
-
-        // Create initial tab
         val startUrl = intentUrl ?: PrefManager.homepage.ifEmpty { "https://www.google.com" }
         newTab(startUrl)
     }
 
     private fun initViews() {
-        toolbarContainer = findViewById(R.id.toolbar_container)
         urlBar = findViewById(R.id.url_bar)
         goButton = findViewById(R.id.btn_go)
         progressBar = findViewById(R.id.progress_bar)
-        tabContentContainer = findViewById(R.id.tab_content_container)
-        bottomNavBar = findViewById(R.id.bottom_nav_bar)
+        webContainer = findViewById(R.id.web_container)
         btnBack = findViewById(R.id.btn_back)
         btnForward = findViewById(R.id.btn_forward)
         btnShare = findViewById(R.id.btn_share)
@@ -138,38 +122,21 @@ class BrowserActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // URL bar - handle enter key and focus
         urlBar.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_GO ||
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
             ) {
                 loadUrlFromBar()
                 true
             } else false
         }
 
-        urlBar.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                urlBar.selectAll()
-            }
-        }
+        urlBar.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) urlBar.selectAll() }
 
-        goButton.setOnClickListener {
-            loadUrlFromBar()
-        }
+        goButton.setOnClickListener { loadUrlFromBar() }
 
-        btnBack.setOnClickListener {
-            getCurrentWebView()?.let { webView ->
-                if (webView.canGoBack()) webView.goBack()
-            }
-        }
-
-        btnForward.setOnClickListener {
-            getCurrentWebView()?.let { webView ->
-                if (webView.canGoForward()) webView.goForward()
-            }
-        }
-
+        btnBack.setOnClickListener { getCurrentWebView()?.goBack() }
+        btnForward.setOnClickListener { getCurrentWebView()?.goForward() }
         btnShare.setOnClickListener {
             getCurrentWebView()?.url?.let { url ->
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -179,49 +146,488 @@ class BrowserActivity : AppCompatActivity() {
                 startActivity(Intent.createChooser(shareIntent, "Share URL"))
             }
         }
+        btnTabs.setOnClickListener { showTabsDialog() }
+        btnMenu.setOnClickListener { showPopupMenu(it) }
+    }
 
-        btnTabs.setOnClickListener {
-            showTabsDialog()
+    // ==================== TAB MANAGEMENT ====================
+
+    @SuppressLint("SetJavaScriptEnabled")
+    fun newTab(url: String) {
+        val tabId = UUID.randomUUID().toString()
+
+        val webView = WebView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                builtInZoomControls = true
+                displayZoomControls = false
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                allowFileAccess = true
+                cacheMode = WebSettings.LOAD_DEFAULT
+                mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                setSupportMultipleWindows(false)
+            }
+
+            // Apply desktop mode default
+            if (PrefManager.desktopModeDefault) {
+                settings.userAgentString = DESKTOP_USER_AGENT
+            }
+
+            webViewClient = createWebViewClient()
+            webChromeClient = createWebChromeClient()
+            setDownloadListener(handleDownload)
+
+            // Register for context menu
+            registerForContextMenu(this)
         }
 
-        btnMenu.setOnClickListener { anchor ->
-            showPopupMenu(anchor)
+        // Apply dark mode
+        applyDarkMode(webView)
+
+        tabs[tabId] = webView
+        tabInfoList.add(TabInfo(tabId, "New Tab", url, PrefManager.desktopModeDefault))
+        switchTab(tabId)
+        webView.loadUrl(url)
+    }
+
+    fun switchTab(tabId: String) {
+        val webView = tabs[tabId] ?: return
+
+        // Hide all WebViews
+        for (i in 0 until webContainer.childCount) {
+            webContainer.getChildAt(i).visibility = View.GONE
+        }
+
+        // Show or add current WebView
+        if (webView.parent == null) {
+            webContainer.addView(webView)
+        }
+        webView.visibility = View.VISIBLE
+
+        activeTabId = tabId
+        updateUrlBar(webView.url ?: "")
+        updateTabCount()
+    }
+
+    fun closeTab(tabId: String) {
+        if (tabs.size <= 1) {
+            // Don't close last tab, create new one instead
+            tabs[tabId]?.loadUrl(PrefManager.homepage)
+            return
+        }
+
+        val webView = tabs.remove(tabId)
+        webView?.destroy()
+        tabInfoList.removeAll { it.id == tabId }
+
+        if (activeTabId == tabId) {
+            val newActive = tabs.keys.firstOrNull() ?: return
+            switchTab(newActive)
+        }
+        updateTabCount()
+    }
+
+    fun getCurrentWebView(): WebView? = tabs[activeTabId]
+
+    private fun updateUrlBar(url: String) {
+        if (!urlBar.hasFocus()) {
+            urlBar.setText(url)
         }
     }
+
+    private fun updateTabCount() {
+        tabCountBadge.text = tabs.size.toString()
+    }
+
+    // ==================== WEBVIEW CLIENTS ====================
+
+    private fun createWebViewClient() = object : WebViewClient() {
+        override fun shouldInterceptRequest(
+            view: WebView?,
+            request: WebResourceRequest?
+        ): WebResourceResponse? {
+            val url = request?.url?.toString() ?: return null
+            if (PrefManager.adBlockEnabled && AdBlocker.shouldBlock(url)) {
+                return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
+            }
+            return super.shouldInterceptRequest(view, request)
+        }
+
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            url?.let { updateUrlBar(it) }
+            progressBar.visibility = View.VISIBLE
+
+            // Update tab info
+            tabInfoList.find { it.id == activeTabId }?.url = url ?: ""
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            progressBar.visibility = View.GONE
+
+            // Update tab title
+            tabInfoList.find { it.id == activeTabId }?.apply {
+                title = view?.title ?: "New Tab"
+                this.url = url ?: ""
+            }
+
+            // Interstitial ad logic
+            pageLoadCount++
+            val now = System.currentTimeMillis()
+            if (pageLoadCount % INTERSTITIAL_PAGE_THRESHOLD == 0 &&
+                (lastInterstitialTime == 0L || now - lastInterstitialTime > INTERSTITIAL_COOLDOWN_MS)
+            ) {
+                AdManager.showInterstitial(this@BrowserActivity)
+                lastInterstitialTime = now
+            }
+        }
+
+        override fun shouldOverrideUrlLoading(
+            view: WebView?,
+            request: WebResourceRequest?
+        ): Boolean {
+            val url = request?.url?.toString() ?: return false
+
+            // Handle special schemes
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                } catch (_: Exception) {}
+                return true
+            }
+            return false
+        }
+    }
+
+    private fun createWebChromeClient() = object : WebChromeClient() {
+        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+            progressBar.progress = newProgress
+            if (newProgress >= 100) {
+                progressBar.visibility = View.GONE
+            }
+        }
+
+        override fun onReceivedTitle(view: WebView?, title: String?) {
+            tabInfoList.find { it.id == activeTabId }?.title = title ?: "New Tab"
+        }
+    }
+
+    // ==================== URL LOADING ====================
 
     private fun loadUrlFromBar() {
         val input = urlBar.text.toString().trim()
         if (input.isEmpty()) return
 
-        val url = processInput(input)
-        getCurrentWebView()?.loadUrl(url)
-
-        // Hide keyboard
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(urlBar.windowToken, 0)
         urlBar.clearFocus()
+
+        val url = when {
+            input.startsWith("http://") || input.startsWith("https://") -> input
+            input.contains(".") && !input.contains(" ") -> "https://$input"
+            else -> PrefManager.searchEngine + Uri.encode(input)
+        }
+
+        getCurrentWebView()?.loadUrl(url)
     }
 
-    private fun processInput(input: String): String {
-        // Already a full URL
-        if (input.startsWith("http://") || input.startsWith("https://") || input.startsWith("file://")) {
-            return input
+    // ==================== DOWNLOADS ====================
+
+    private val handleDownload = DownloadListener { url, _, contentDisposition, mimeType, _ ->
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+        ) {
+            pendingUrl = url
+            pendingDisposition = contentDisposition
+            pendingMime = mimeType
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                PERMISSION_REQUEST_DOWNLOAD
+            )
+        } else {
+            startDownload(url, contentDisposition, mimeType)
         }
-        // Looks like a domain (contains a dot, no spaces)
-        if (input.contains(".") && !input.contains(" ")) {
-            return "https://$input"
-        }
-        // Treat as search query
-        val searchEngine = PrefManager.searchEngine
-        val searchUrl = when (searchEngine) {
-            "google" -> "https://www.google.com/search?q="
-            "duckduckgo" -> "https://duckduckgo.com/?q="
-            "bing" -> "https://www.bing.com/search?q="
-            "yahoo" -> "https://search.yahoo.com/search?p="
-            else -> "https://www.google.com/search?q="
-        }
-        return searchUrl + Uri.encode(input)
     }
+
+    private fun startDownload(url: String, contentDisposition: String, mimeType: String) {
+        try {
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+                setMimeType(mimeType)
+                addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
+                addRequestHeader("User-Agent", getCurrentWebView()?.settings?.userAgentString)
+                setDescription("Downloading file...")
+                setTitle(fileName)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+            Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Download failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_DOWNLOAD && grantResults.isNotEmpty()
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
+            startDownload(pendingUrl, pendingDisposition, pendingMime)
+        }
+    }
+
+    // ==================== POPUP MENU ====================
+
+    private fun showPopupMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.menu_browser, popup.menu)
+
+        popup.menu.findItem(R.id.action_desktop_mode)?.isChecked =
+            tabInfoList.find { it.id == activeTabId }?.isDesktopMode ?: false
+        popup.menu.findItem(R.id.action_dark_mode)?.isChecked = PrefManager.darkMode
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_new_tab -> {
+                    newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
+                }
+                R.id.action_bookmarks -> showBookmarksDialog()
+                R.id.action_add_bookmark -> addCurrentBookmark()
+                R.id.action_desktop_mode -> toggleDesktopMode()
+                R.id.action_dark_mode -> toggleDarkMode()
+                R.id.action_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                }
+                R.id.action_exit -> finish()
+            }
+            true
+        }
+        popup.show()
+    }
+
+    // ==================== TABS DIALOG ====================
+
+    private fun showTabsDialog() {
+        val builder = AlertDialog.Builder(this, R.style.Theme_LiteBrowser)
+        val view = layoutInflater.inflate(R.layout.dialog_tabs, null)
+        builder.setView(view)
+
+        val dialog = builder.create()
+
+        // Using LinearLayout for tabs
+        val btnNewTab = view.findViewById<View>(R.id.btn_new_tab)
+
+        // Simple tab list using LinearLayout
+        val container = view.findViewById<android.widget.LinearLayout>(R.id.tab_list_container_simple)
+        container?.removeAllViews()
+
+        for (tabInfo in tabInfoList) {
+            val tabView = layoutInflater.inflate(R.layout.item_tab, container, false)
+            val title = tabView.findViewById<TextView>(R.id.tab_title)
+            val url = tabView.findViewById<TextView>(R.id.tab_url)
+            val closeBtn = tabView.findViewById<ImageButton>(R.id.tab_close)
+
+            title.text = tabInfo.title
+            url.text = tabInfo.url
+            tabView.alpha = if (tabInfo.id == activeTabId) 1.0f else 0.7f
+
+            tabView.setOnClickListener {
+                switchTab(tabInfo.id)
+                dialog.dismiss()
+            }
+
+            closeBtn.setOnClickListener {
+                closeTab(tabInfo.id)
+                if (tabs.size <= 1) dialog.dismiss()
+                // Refresh the dialog
+                container.removeView(tabView)
+            }
+
+            container?.addView(tabView)
+        }
+
+        btnNewTab?.setOnClickListener {
+            newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    // ==================== BOOKMARKS ====================
+
+    private fun addCurrentBookmark() {
+        val webView = getCurrentWebView() ?: return
+        val title = webView.title ?: "Bookmark"
+        val url = webView.url ?: return
+
+        scope.launch(Dispatchers.IO) {
+            AppDatabase.getInstance(this@BrowserActivity).bookmarkDao()
+                .insert(Bookmark(title = title, url = url, createdAt = System.currentTimeMillis()))
+            launch(Dispatchers.Main) {
+                Toast.makeText(this@BrowserActivity, "Bookmark added", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showBookmarksDialog() {
+        scope.launch(Dispatchers.IO) {
+            val bookmarks = AppDatabase.getInstance(this@BrowserActivity).bookmarkDao().getAll()
+            launch(Dispatchers.Main) {
+                if (bookmarks.isEmpty()) {
+                    Toast.makeText(this@BrowserActivity, "No bookmarks", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val names = bookmarks.map { it.title }.toTypedArray()
+                AlertDialog.Builder(this@BrowserActivity)
+                    .setTitle("Bookmarks")
+                    .setItems(names) { _, which ->
+                        getCurrentWebView()?.loadUrl(bookmarks[which].url)
+                    }
+                    .setNegativeButton("Close", null)
+                    .show()
+            }
+        }
+    }
+
+    // ==================== DESKTOP MODE ====================
+
+    private fun toggleDesktopMode() {
+        val tabInfo = tabInfoList.find { it.id == activeTabId } ?: return
+        tabInfo.isDesktopMode = !tabInfo.isDesktopMode
+
+        val webView = getCurrentWebView() ?: return
+        webView.settings.userAgentString =
+            if (tabInfo.isDesktopMode) DESKTOP_USER_AGENT else null
+        webView.reload()
+
+        Toast.makeText(
+            this,
+            if (tabInfo.isDesktopMode) "Desktop mode ON" else "Desktop mode OFF",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    // ==================== DARK MODE ====================
+
+    private fun toggleDarkMode() {
+        PrefManager.darkMode = !PrefManager.darkMode
+        applyDarkMode(getCurrentWebView())
+
+        Toast.makeText(
+            this,
+            if (PrefManager.darkMode) "Dark mode ON" else "Dark mode OFF",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun applyDarkMode(webView: WebView?) {
+        webView ?: return
+        if (PrefManager.darkMode) {
+            if (Build.VERSION.SDK_INT >= 33) {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, true)
+                }
+            } else if (Build.VERSION.SDK_INT >= 29) {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                    WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_ON)
+                }
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= 33) {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, false)
+                }
+            } else if (Build.VERSION.SDK_INT >= 29) {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                    WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_OFF)
+                }
+            }
+        }
+    }
+
+    // ==================== CONTEXT MENU ====================
+
+    override fun onCreateContextMenu(
+        menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        val webView = v as? WebView ?: return
+        val hitTestResult = webView.hitTestResult
+
+        when (hitTestResult.type) {
+            WebView.HitTestResult.SRC_ANCHOR_TYPE -> {
+                menu?.setHeaderTitle("Link")
+                menu?.add(0, 1, 0, "Open in new tab")
+                menu?.add(0, 2, 0, "Copy link")
+                menu?.add(0, 3, 0, "Share link")
+            }
+            WebView.HitTestResult.IMAGE_TYPE -> {
+                menu?.setHeaderTitle("Image")
+                menu?.add(0, 4, 0, "Open image")
+                menu?.add(0, 5, 0, "Copy image URL")
+            }
+        }
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        val webView = getCurrentWebView() ?: return super.onContextItemSelected(item)
+        val result = webView.hitTestResult
+        val url = result.extra ?: return super.onContextItemSelected(item)
+
+        when (item.itemId) {
+            1 -> newTab(url)
+            2 -> {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
+                Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+            }
+            3 -> {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, url)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Share"))
+            }
+            4 -> newTab(url)
+            5 -> {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Image URL", url))
+                Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+            }
+        }
+        return true
+    }
+
+    // ==================== ADMOB ====================
+
+    private fun setupAdMob() {
+        // Banner ad
+        val adView = AdView(this).apply {
+            adUnitId = "ca-app-pub-3940256099942544/6300978111"
+            setAdSize(AdSize.BANNER)
+        }
+        adContainer.addView(adView)
+        adView.loadAd(AdRequest.Builder().build())
+
+        // Load interstitial
+        AdManager.loadInterstitial(this)
+    }
+
+    // ==================== INTENT HANDLING ====================
 
     private fun handleIncomingIntent(intent: Intent?): String? {
         if (intent?.action == Intent.ACTION_VIEW) {
@@ -238,669 +644,35 @@ class BrowserActivity : AppCompatActivity() {
         }
     }
 
-    // ======================== Tab Management ========================
-
-    @SuppressLint("SetJavaScriptEnabled")
-    fun newTab(url: String) {
-        val tabId = UUID.randomUUID().toString()
-
-        val webView = WebView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        setupWebView(webView, tabId)
-
-        tabs[tabId] = webView
-        tabInfoList.add(TabInfo(id = tabId, title = "New Tab", url = url, isDesktopMode = PrefManager.desktopModeDefault))
-
-        // Add to container but hide it
-        webView.visibility = View.GONE
-        tabContentContainer.addView(webView)
-
-        // Switch to the new tab
-        switchTab(tabId)
-
-        // Load the URL
-        webView.loadUrl(url)
-
-        updateTabCountBadge()
-    }
-
-    fun switchTab(tabId: String) {
-        val webView = tabs[tabId] ?: return
-
-        // Hide current WebView
-        tabs[activeTabId]?.visibility = View.GONE
-
-        // Show new WebView
-        webView.visibility = View.VISIBLE
-        activeTabId = tabId
-
-        // Update URL bar
-        val info = tabInfoList.find { it.id == tabId }
-        urlBar.setText(webView.url ?: info?.url ?: "")
-
-        // Update desktop mode state
-        updateDesktopModeUI(webView)
-
-        updateTabCountBadge()
-    }
-
-    fun closeTab(tabId: String) {
-        val webView = tabs.remove(tabId) ?: return
-        tabInfoList.removeAll { it.id == tabId }
-
-        webView.stopLoading()
-        webView.destroy()
-        tabContentContainer.removeView(webView)
-
-        if (tabInfoList.isEmpty()) {
-            // Create a new tab if all tabs closed
-            newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
-        } else if (activeTabId == tabId) {
-            // Switch to the last tab
-            switchTab(tabInfoList.last().id)
-        }
-
-        updateTabCountBadge()
-    }
-
-    fun getCurrentWebView(): WebView? {
-        return tabs[activeTabId]
-    }
-
-    private fun updateTabCountBadge() {
-        tabCountBadge.text = tabs.size.toString()
-        tabCountBadge.visibility = if (tabs.size > 0) View.VISIBLE else View.GONE
-    }
-
-    private fun showTabsDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_tabs, null)
-        val tabListContainer = dialogView.findViewById<ViewGroup>(R.id.tab_list_container)
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Tabs (${tabs.size})")
-            .setView(dialogView)
-            .setPositiveButton("New Tab") { _, _ ->
-                newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
-            }
-            .setNegativeButton("Close", null)
-            .create()
-
-        // Populate tab list
-        for (info in tabInfoList) {
-            val tabView = LayoutInflater.from(this).inflate(R.layout.item_tab, tabListContainer, false)
-            val titleText = tabView.findViewById<TextView>(R.id.tab_title)
-            val urlText = tabView.findViewById<TextView>(R.id.tab_url)
-            val closeBtn = tabView.findViewById<ImageButton>(R.id.tab_close)
-
-            titleText.text = info.title
-            urlText.text = info.url
-
-            // Highlight active tab
-            if (info.id == activeTabId) {
-                tabView.setBackgroundColor(ContextCompat.getColor(this, R.color.tab_active_bg))
-            }
-
-            tabView.setOnClickListener {
-                switchTab(info.id)
-                dialog.dismiss()
-            }
-
-            closeBtn.setOnClickListener {
-                closeTab(info.id)
-                // Refresh the dialog
-                tabListContainer.removeView(tabView)
-                if (tabs.isEmpty()) dialog.dismiss()
-            }
-
-            tabListContainer.addView(tabView)
-        }
-
-        dialog.show()
-    }
-
-    // ======================== WebView Setup ========================
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView(webView: WebView, tabId: String) {
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            builtInZoomControls = true
-            displayZoomControls = false
-            allowFileAccess = true
-            allowContentAccess = true
-            setSupportMultipleWindows(false)
-            javaScriptCanOpenWindowsAutomatically = true
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            cacheMode = WebSettings.LOAD_DEFAULT
-            mediaPlaybackRequiresUserGesture = false
-            setSupportZoom(true)
-
-            // Apply desktop mode if needed
-            val info = tabInfoList.find { it.id == tabId }
-            if (info?.isDesktopMode == true) {
-                userAgentString = DESKTOP_USER_AGENT
-            }
-        }
-
-        // Cookie manager
-        CookieManager.getInstance().apply {
-            setAcceptCookie(true)
-            setAcceptThirdPartyCookies(webView, true)
-        }
-
-        // Apply dark mode
-        applyDarkMode(webView)
-
-        // WebViewClient
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): WebResourceResponse? {
-                val url = request?.url?.toString() ?: return null
-                if (PrefManager.adBlockEnabled && AdBlocker.shouldBlock(url)) {
-                    return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
-                }
-                return super.shouldInterceptRequest(view, request)
-            }
-
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                if (view?.id == tabs[activeTabId]?.id) {
-                    progressBar.visibility = View.VISIBLE
-                    urlBar.setText(url ?: "")
-                }
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                if (view?.id == tabs[activeTabId]?.id) {
-                    progressBar.visibility = View.GONE
-                    urlBar.setText(url ?: "")
-                }
-                // Update tab info
-                val info = tabInfoList.find { it.id == tabId }
-                info?.url = url ?: ""
-                info?.title = view?.title ?: "Untitled"
-
-                // Interstitial ad logic
-                pageLoadCount++
-                val now = System.currentTimeMillis()
-                if (pageLoadCount >= INTERSTITIAL_PAGE_THRESHOLD &&
-                    (now - lastInterstitialTime) >= INTERSTITIAL_COOLDOWN_MS
-                ) {
-                    showInterstitialAd()
-                }
-            }
-
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
-                val url = request?.url?.toString() ?: return false
-                // Handle special schemes
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                    } catch (e: Exception) {
-                        // Ignore if no app handles it
-                    }
-                    return true
-                }
-                return false
-            }
-        }
-
-        // WebChromeClient
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                super.onProgressChanged(view, newProgress)
-                progressBar.progress = newProgress
-                if (newProgress >= 100) {
-                    progressBar.visibility = View.GONE
-                } else {
-                    progressBar.visibility = View.VISIBLE
-                }
-            }
-
-            override fun onReceivedTitle(view: WebView?, title: String?) {
-                super.onReceivedTitle(view, title)
-                val info = tabInfoList.find { it.id == tabId }
-                info?.title = title ?: "Untitled"
-                if (view?.id == tabs[activeTabId]?.id) {
-                    urlBar.setText(view.url ?: "")
-                }
-            }
-        }
-
-        // Download listener
-        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                pendingDownloadUrl = url
-                pendingDownloadContentDisposition = contentDisposition
-                pendingDownloadMimeType = mimetype
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    PERMISSION_REQUEST_DOWNLOAD
-                )
-            } else {
-                startDownload(url, contentDisposition, mimetype)
-            }
-        }
-
-        // Long press context menu
-        registerForContextMenu(webView)
-    }
-
-    // ======================== Context Menu ========================
-
-    override fun onCreateContextMenu(
-        menu: ContextMenu?,
-        v: View?,
-        menuInfo: ContextMenu.ContextMenuInfo?
-    ) {
-        super.onCreateContextMenu(menu, v, menuInfo)
-        if (v is WebView) {
-            val hitTestResult = v.hitTestResult
-            when (hitTestResult.type) {
-                WebView.HitTestResult.SRC_ANCHOR_TYPE -> {
-                    menu?.setHeaderTitle("Link")
-                    menu?.add(0, 1, 0, "Open in new tab")
-                    menu?.add(0, 2, 0, "Copy link")
-                    menu?.add(0, 3, 0, "Share link")
-                }
-                WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
-                WebView.HitTestResult.IMAGE_TYPE -> {
-                    menu?.setHeaderTitle("Image")
-                    menu?.add(0, 4, 0, "Open image in new tab")
-                    menu?.add(0, 5, 0, "Save image")
-                    menu?.add(0, 6, 0, "Copy image link")
-                    menu?.add(0, 7, 0, "Share image link")
-                }
-                WebView.HitTestResult.PHONE_TYPE -> {
-                    menu?.setHeaderTitle("Phone")
-                    menu?.add(0, 8, 0, "Call number")
-                    menu?.add(0, 9, 0, "Copy number")
-                }
-                WebView.HitTestResult.EMAIL_TYPE -> {
-                    menu?.setHeaderTitle("Email")
-                    menu?.add(0, 10, 0, "Send email")
-                    menu?.add(0, 11, 0, "Copy email")
-                }
-            }
-        }
-    }
-
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        val webView = getCurrentWebView() ?: return super.onContextItemSelected(item)
-        val result = webView.hitTestResult
-        val extra = result.extra ?: return super.onContextItemSelected(item)
-
-        when (item.itemId) {
-            1 -> newTab(extra) // Open link in new tab
-            2 -> { // Copy link
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("URL", extra))
-                Toast.makeText(this, "Link copied", Toast.LENGTH_SHORT).show()
-            }
-            3 -> { // Share link
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, extra)
-                }
-                startActivity(Intent.createChooser(shareIntent, "Share link"))
-            }
-            4 -> newTab(extra) // Open image in new tab
-            5 -> { // Save image
-                startDownload(extra, "", "image/*")
-            }
-            6 -> { // Copy image link
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Image URL", extra))
-                Toast.makeText(this, "Image link copied", Toast.LENGTH_SHORT).show()
-            }
-            7 -> { // Share image link
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, extra)
-                }
-                startActivity(Intent.createChooser(shareIntent, "Share image link"))
-            }
-            8 -> { // Call number
-                startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$extra")))
-            }
-            9 -> { // Copy number
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Phone", extra))
-                Toast.makeText(this, "Number copied", Toast.LENGTH_SHORT).show()
-            }
-            10 -> { // Send email
-                startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$extra")))
-            }
-            11 -> { // Copy email
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Email", extra))
-                Toast.makeText(this, "Email copied", Toast.LENGTH_SHORT).show()
-            }
-        }
-        return true
-    }
-
-    // ======================== Menu ========================
-
-    private fun showPopupMenu(anchor: View) {
-        val popup = PopupMenu(this, anchor, Gravity.END)
-        popup.menuInflater.inflate(R.menu.menu_browser, popup.menu)
-
-        // Update toggle states
-        popup.menu.findItem(R.id.action_desktop_mode)?.isChecked = PrefManager.desktopModeDefault
-        popup.menu.findItem(R.id.action_dark_mode)?.isChecked = PrefManager.darkMode
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_new_tab -> {
-                    newTab(PrefManager.homepage.ifEmpty { "https://www.google.com" })
-                    true
-                }
-                R.id.action_bookmarks -> {
-                    showBookmarksDialog()
-                    true
-                }
-                R.id.action_add_bookmark -> {
-                    addCurrentBookmark()
-                    true
-                }
-                R.id.action_desktop_mode -> {
-                    toggleDesktopMode()
-                    true
-                }
-                R.id.action_dark_mode -> {
-                    toggleDarkMode()
-                    true
-                }
-                R.id.action_settings -> {
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                    true
-                }
-                R.id.action_exit -> {
-                    finish()
-                    true
-                }
-                else -> false
-            }
-        }
-        popup.show()
-    }
-
-    // ======================== Desktop Mode ========================
-
-    private fun toggleDesktopMode() {
-        val webView = getCurrentWebView() ?: return
-        val tabInfo = tabInfoList.find { it.id == activeTabId } ?: return
-        val newDesktopMode = !tabInfo.isDesktopMode
-        tabInfo.isDesktopMode = newDesktopMode
-
-        webView.settings.userAgentString = if (newDesktopMode) DESKTOP_USER_AGENT else null
-        webView.reload()
-        updateDesktopModeUI(webView)
-    }
-
-    private fun updateDesktopModeUI(webView: WebView) {
-        // Could update a visual indicator if needed
-    }
-
-    // ======================== Dark Mode ========================
-
-    private fun toggleDarkMode() {
-        PrefManager.darkMode = !PrefManager.darkMode
-        tabs.values.forEach { webView -> applyDarkMode(webView) }
-        // Reload current tab to apply
-        getCurrentWebView()?.reload()
-    }
-
-    @Suppress("DEPRECATION")
-    private fun applyDarkMode(webView: WebView) {
-        if (PrefManager.darkMode) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // API 33+
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, true)
-                }
-            } else {
-                // API < 33
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-                    WebSettingsCompat.setForceDark(
-                        webView.settings,
-                        WebSettingsCompat.FORCE_DARK_AUTO
-                    )
-                }
-            }
-            // Also try to inject dark CSS for better support
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
-                WebSettingsCompat.setForceDarkStrategy(
-                    webView.settings,
-                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
-                )
-            }
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, false)
-                }
-            } else {
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-                    WebSettingsCompat.setForceDark(
-                        webView.settings,
-                        WebSettingsCompat.FORCE_DARK_OFF
-                    )
-                }
-            }
-        }
-    }
-
-    // ======================== Bookmarks ========================
-
-    private fun showBookmarksDialog() {
-        val db = AppDatabase.getInstance(this)
-        val dao = db.bookmarkDao()
-
-        scope.launch {
-            dao.getAll().collectLatest { bookmarks ->
-                val names = bookmarks.map { it.title }.toTypedArray()
-                val dialog = androidx.appcompat.app.AlertDialog.Builder(this@BrowserActivity)
-                    .setTitle("Bookmarks")
-                    .setItems(names) { _, which ->
-                        val bookmark = bookmarks[which]
-                        getCurrentWebView()?.loadUrl(bookmark.url)
-                    }
-                    .setNeutralButton("Delete") { _, _ ->
-                        // Show delete selection
-                        showDeleteBookmarkDialog(bookmarks)
-                    }
-                    .setNegativeButton("Close", null)
-                    .create()
-                dialog.show()
-            }
-        }
-    }
-
-    private fun showDeleteBookmarkDialog(bookmarks: List<Bookmark>) {
-        if (bookmarks.isEmpty()) return
-        val names = bookmarks.map { it.title }.toTypedArray()
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Delete Bookmark")
-            .setItems(names) { _, which ->
-                val db = AppDatabase.getInstance(this)
-                scope.launch(Dispatchers.IO) {
-                    db.bookmarkDao().delete(bookmarks[which])
-                }
-                Toast.makeText(this, "Bookmark deleted", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun addCurrentBookmark() {
-        val webView = getCurrentWebView() ?: return
-        val url = webView.url ?: return
-        val title = webView.title ?: url
-
-        val bookmark = Bookmark(title = title, url = url)
-        val db = AppDatabase.getInstance(this)
-        scope.launch(Dispatchers.IO) {
-            db.bookmarkDao().insert(bookmark)
-        }
-        Toast.makeText(this, "Bookmark added", Toast.LENGTH_SHORT).show()
-    }
-
-    // ======================== Downloads ========================
-
-    private fun startDownload(url: String, contentDisposition: String, mimeType: String) {
-        try {
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val request = DownloadManager.Request(Uri.parse(url)).apply {
-                val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
-                setTitle(fileName)
-                setDescription("Downloading $fileName")
-                setNotificationVisibility(
-                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-                )
-                setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    fileName
-                )
-                setAllowedOverMetered(true)
-                setAllowedOverRoaming(true)
-                // Forward cookies
-                val cookies = CookieManager.getInstance().getCookie(url)
-                if (cookies != null) {
-                    addRequestHeader("Cookie", cookies)
-                }
-            }
-            downloadManager.enqueue(request)
-            Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Download failed: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_DOWNLOAD) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startDownload(pendingDownloadUrl, pendingDownloadContentDisposition, pendingDownloadMimeType)
-            } else {
-                Toast.makeText(this, "Download permission denied", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    // ======================== AdMob ========================
-
-    private fun loadBannerAd() {
-        try {
-            val adView = AdView(this).apply {
-                adSize = com.google.android.gms.ads.AdSize.BANNER
-                adUnitId = AdManager.bannerAdUnitId
-            }
-            adContainer.removeAllViews()
-            adContainer.addView(adView)
-            val adRequest = AdRequest.Builder().build()
-            adView.loadAd(adRequest)
-        } catch (e: Exception) {
-            // Ad loading failed silently
-        }
-    }
-
-    private fun loadInterstitialAd() {
-        try {
-            val adRequest = AdRequest.Builder().build()
-            InterstitialAd.load(
-                this,
-                AdManager.interstitialAdUnitId,
-                adRequest,
-                object : InterstitialAdLoadCallback() {
-                    override fun onAdLoaded(ad: InterstitialAd) {
-                        interstitialAd = ad
-                    }
-
-                    override fun onAdFailedToLoad(error: LoadAdError) {
-                        interstitialAd = null
-                    }
-                }
-            )
-        } catch (e: Exception) {
-            // Ad loading failed silently
-        }
-    }
-
-    private fun showInterstitialAd() {
-        interstitialAd?.let { ad ->
-            ad.show(this)
-            pageLoadCount = 0
-            lastInterstitialTime = System.currentTimeMillis()
-            interstitialAd = null
-            // Preload next interstitial
-            loadInterstitialAd()
-        }
-    }
-
-    // ======================== Back Press ========================
+    // ==================== BACK PRESS ====================
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         val webView = getCurrentWebView()
-        if (webView != null && webView.canGoBack()) {
+        if (webView?.canGoBack() == true) {
             webView.goBack()
+        } else if (tabs.size > 1) {
+            closeTab(activeTabId)
         } else {
-            // If there are multiple tabs, close the current one
-            if (tabs.size > 1) {
-                closeTab(activeTabId)
-            } else {
-                super.onBackPressed()
-            }
+            super.onBackPressed()
         }
     }
 
-    // ======================== Lifecycle ========================
+    // ==================== LIFECYCLE ====================
 
     override fun onResume() {
         super.onResume()
-        tabs.values.forEach { it.onResume() }
+        getCurrentWebView()?.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        tabs.values.forEach { it.onPause() }
+        getCurrentWebView()?.onPause()
     }
 
     override fun onDestroy() {
-        // Clean up all WebViews
-        tabs.values.forEach { webView ->
-            webView.stopLoading()
-            webView.destroy()
-        }
+        tabs.values.forEach { it.destroy() }
         tabs.clear()
-        tabInfoList.clear()
         super.onDestroy()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // Handle configuration changes without recreating
     }
 }

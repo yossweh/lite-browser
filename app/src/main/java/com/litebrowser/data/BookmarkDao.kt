@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.Flow
 interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarks ORDER BY createdAt DESC")
-    fun getAll(): Flow<List<Bookmark>>
+    fun getAllFlow(): Flow<List<Bookmark>>
+
+    @Query("SELECT * FROM bookmarks ORDER BY createdAt DESC")
+    suspend fun getAll(): List<Bookmark>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(bookmark: Bookmark)

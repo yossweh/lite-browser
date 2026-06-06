@@ -12,10 +12,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
+import com.litebrowser.helper.PrefManager
 
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var prefManager: PrefManager
+    // Using PrefManager singleton
 
     private lateinit var tvHomepageValue: TextView
     private lateinit var tvSearchEngineValue: TextView
@@ -33,9 +34,9 @@ class SettingsActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        prefManager = PrefManager(this)
+        // PrefManager already initialized in Application
 
-        if (prefManager.darkMode) {
+        if (PrefManager.darkMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -75,12 +76,12 @@ class SettingsActivity : AppCompatActivity() {
 
         // Ad Blocker toggle
         switchAdBlocker.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.adBlockEnabled = isChecked
+            PrefManager.adBlockEnabled = isChecked
         }
 
         // Dark Mode toggle
         switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.darkMode = isChecked
+            PrefManager.darkMode = isChecked
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             } else {
@@ -90,7 +91,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Desktop Mode toggle
         switchDesktopMode.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.desktopModeDefault = isChecked
+            PrefManager.desktopModeDefault = isChecked
         }
 
         // Clear History button
@@ -143,16 +144,16 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun loadSettings() {
-        tvHomepageValue.text = prefManager.homepage
-        tvSearchEngineValue.text = getSearchEngineName(prefManager.searchEngine)
-        switchAdBlocker.isChecked = prefManager.adBlockEnabled
-        switchDarkMode.isChecked = prefManager.darkMode
-        switchDesktopMode.isChecked = prefManager.desktopModeDefault
+        tvHomepageValue.text = PrefManager.homepage
+        tvSearchEngineValue.text = getSearchEngineName(PrefManager.searchEngine)
+        switchAdBlocker.isChecked = PrefManager.adBlockEnabled
+        switchDarkMode.isChecked = PrefManager.darkMode
+        switchDesktopMode.isChecked = PrefManager.desktopModeDefault
     }
 
     private fun showHomepageDialog() {
         val editText = EditText(this).apply {
-            setText(prefManager.homepage)
+            setText(PrefManager.homepage)
             setPadding(64, 32, 64, 16)
             hint = "https://example.com"
         }
@@ -168,7 +169,7 @@ class SettingsActivity : AppCompatActivity() {
                     } else {
                         url
                     }
-                    prefManager.homepage = finalUrl
+                    PrefManager.homepage = finalUrl
                     tvHomepageValue.text = finalUrl
                 }
             }
@@ -177,13 +178,13 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun showSearchEngineDialog() {
-        val currentEngine = getSearchEngineName(prefManager.searchEngine)
+        val currentEngine = getSearchEngineName(PrefManager.searchEngine)
         val checkedIndex = searchEngines.indexOf(currentEngine).coerceAtLeast(0)
 
         AlertDialog.Builder(this)
             .setTitle("Search Engine")
             .setSingleChoiceItems(searchEngines, checkedIndex) { dialog, which ->
-                prefManager.searchEngine = searchEngineUrls[which]
+                PrefManager.searchEngine = searchEngineUrls[which]
                 tvSearchEngineValue.text = searchEngines[which]
                 dialog.dismiss()
             }
