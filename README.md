@@ -8,7 +8,7 @@
 <p align="center">
 A fast, lightweight Android browser built for privacy and speed.<br/>
 Built-in ad blocker, dark mode, multi-tab browsing, and custom themes.<br/>
-Only ~2MB — lighter than most browsers.
+Only ~10MB — lighter than most browsers.
 </p>
 
 <p align="center">
