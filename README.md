@@ -1,68 +1,87 @@
-<h1 align="center">ESearch</h1>
+<h1 align="center">LiteBrowser</h1>
 
 <p align="center">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/></a>
   <a href="https://android-arsenal.com/api?level=21"><img alt="API" src="https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat"/></a>
-  <a href="https://github.com/t8rin/FridgeXLight/actions"><img alt="Build Status" src="https://github.com/skydoves/Pokedex/workflows/Android%20CI/badge.svg"/></a> 
-  <a href="https://github.com/t8rin"><img alt="Profile" src="https://img.shields.io/badge/Github-t8rin-blue?logo=github"/></a> 
 </p>
-
-<p align="center">  
-ESearch is a lightweight beatufull web browser based on android webview.<br>You can easily change the search engine during your query to find everything you need <br>Project includes DuckDuckGo seclusion scripts, DNT header, JavaScript disabling and another privacy settings. <br> Smart autoupdated built-in adblock silently removes all ads on the pages
-</p>
-</br>
 
 <p align="center">
-<img src="blob/preview/intro.png"/>
+A fast, lightweight Android browser built for privacy and speed.<br/>
+Built-in ad blocker, dark mode, multi-tab browsing, and custom themes.<br/>
+Only ~2MB — lighter than most browsers.
 </p>
 
+<p align="center">
+<img src="blob/preview/intro.png" width="250"/>
+</p>
+
+---
+
+## Features
+
+- 🛡️ **Ad Blocker** — Built-in ad blocking removes ads, popups, and trackers
+- 🌙 **Dark Mode** — Instant dark mode with CSS injection
+- 📑 **Multi-Tab** — Smooth tab management with bottom navigation
+- 🔖 **Bookmarks** — Save and organize your favorite sites
+- 🎨 **Themes** — 8 custom themes to personalize your experience
+- 🖥️ **Desktop Mode** — View desktop versions of websites
+- 🏠 **Home Button** — Quick access to your homepage
+- 🔄 **Pull to Refresh** — Refresh pages with a simple gesture
+- 📡 **Offline Detection** — Smart offline status indicator
+
 ## Download
-Go to the [Releases](https://github.com/t8rin/ESearch/releases) to download the latest APK.
 
+Download the latest APK from [Releases](https://github.com/yossweh/lite-browser/releases/tag/v57).
 
+Also available on:
+- [APKPure](https://apkpure.com/p/com.litebrowser)
+- [itch.io](https://0xchapo.itch.io/litebrowser)
 
+## Tech Stack
 
+- **Language:** Kotlin
+- **Min SDK:** 21 (Android 5.0)
+- **Architecture:** MVVM with Room database
+- **UI:** Material Design Components
+- **Browser:** Android WebView with WebKit
 
-## Tech stack & Open-source libraries
-- Minimum SDK level 21
+### Libraries
+- Room Persistence — local database for bookmarks
+- RecyclerView — efficient list display
+- ViewBinding — type-safe view references
+- Glide — image loading
+- Material Components — Material Design UI
+- Looping Layout — infinite scroll
+- WebKit — modern WebView API
 
-- [Kotlin](https://kotlinlang.org/) based 
+## Permissions
 
-- [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) to work with internet and move tasks to a secondary thread
+- `INTERNET` — Required for browsing
+- `WRITE_EXTERNAL_STORAGE` — For downloading files
 
-- JetPack
-  - Room Persistence - construct the database using the abstract layer.
-  - RecyclerView - for displaying large sets of data in UI while minimizing memory usage.
-  - ViewBinding - convenient communication with xml layouts.
-  - WebView - browser engine
-  - Palette - to generate color palette based on bitmap
-  - WebKit - modern WebView api
+No unnecessary permissions. No tracking. No data collection.
 
-- [Glide](https://github.com/bumptech/glide) - loading images.
+## Privacy
 
-- [Material-Components](https://github.com/material-components/material-components-android) - Material design components like ripple animation, cardView.
+LiteBrowser respects your privacy:
+- No user accounts required
+- No analytics or tracking
+- No data sent to external servers
+- Browsing data stays on your device
 
-- [Looping Layout](https://github.com/BeksOmega/looping-layout) - RecyclerView layout manager that provides infinite scroll in both directions
+See [PRIVACY.md](PRIVACY.md) for full details.
 
-- [Scrolling Pager Indicator](https://github.com/Tinkoff/ScrollingPagerIndicator) - RecyclerView scroll pages indication
+## Open Source
 
+LiteBrowser is open source under the [Apache 2.0 License](LICENSE).
 
-## MAD Score
-<img src="blob/preview/mad.png"/>
+Originally based on [ESearch](https://github.com/T8RIN/ESearch) by T8RIN.
 
-# License
-```xml
-Designed and developed by 2021 T8RIN
+## Contributing
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-   http://www.apache.org/licenses/LICENSE-2.0
+## Contact
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+- GitHub: [@yossweh](https://github.com/yossweh)
+- Issues: [GitHub Issues](https://github.com/yossweh/lite-browser/issues)
