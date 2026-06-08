@@ -39,12 +39,12 @@ jobs:
             -validity 10000
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Sign APK with v1+v2
         run: |
           BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
-          APK=app/build/outputs/apk/debug/app-debug.apk
+          APK=app/build/outputs/apk/release/app-release-unsigned.apk
           ${BUILD_TOOLS}apksigner sign \
             --ks ~/.android/debug.keystore \
             --ks-pass pass:android --key-pass pass:android \
@@ -53,13 +53,13 @@ jobs:
           ${BUILD_TOOLS}apksigner verify --verbose $APK
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/LiteBrowser-v${{ github.run_number }}.apk
+        run: mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/LiteBrowser-v${{ github.run_number }}.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: LiteBrowser
-          path: app/build/outputs/apk/debug/LiteBrowser-v${{ github.run_number }}.apk
+          path: app/build/outputs/apk/release/LiteBrowser-v${{ github.run_number }}.apk
 
       - name: Create Release
         if: github.event_name == 'push'
@@ -67,5 +67,5 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: LiteBrowser v${{ github.run_number }}
-          files: app/build/outputs/apk/debug/LiteBrowser-v${{ github.run_number }}.apk
+          files: app/build/outputs/apk/release/LiteBrowser-v${{ github.run_number }}.apk
           generate_release_notes: true
